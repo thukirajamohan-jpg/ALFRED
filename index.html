@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ALFRED">
+<meta name="theme-color" content="#060608">
+<title>ALFRED</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060608;--s1:#0d0d15;--s2:#12121c;--s3:#181826;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --nagi:#7EB8F7;--ndim:rgba(126,184,247,0.1);--nb:rgba(126,184,247,0.22);
+  --kuni:#FF5733;--kdim:rgba(255,87,51,0.1);--kb:rgba(255,87,51,0.22);
+  --text:#e8e8f0;--muted:rgba(232,232,240,0.38);--muted2:rgba(232,232,240,0.6);
+  --acc:var(--nagi);--adim:var(--ndim);--ab:var(--nb);
+  --green:#4ade80;--gdim:rgba(74,222,128,0.1);
+  --amber:#fbbf24;--amdim:rgba(251,191,36,0.1);
+  --red:#f87171;--rdim:rgba(248,113,113,0.1);
+  --mono:'DM Mono',monospace;--dis:'Bebas Neue',sans-serif;--sans:'Syne',sans-serif;
+}
+.km{--acc:var(--kuni);--adim:var(--kdim);--ab:var(--kb);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.4;mix-blend-mode:overlay;}
+
+/* ── ONBOARDING ── */
+#onboard{position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;padding:60px 28px 40px;overflow-y:auto;}
+.ob-logo{font-family:var(--dis);font-size:52px;letter-spacing:6px;color:var(--nagi);margin-bottom:4px;}
+.ob-sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:3px;margin-bottom:40px;}
+.ob-q{font-family:var(--dis);font-size:22px;letter-spacing:2px;margin-bottom:16px;color:var(--text);}
+.ob-sub-q{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.ob-inp{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;font-family:var(--sans);font-size:15px;color:var(--text);outline:none;margin-bottom:12px;}
+.ob-inp:focus{border-color:var(--nb);}
+.ob-inp::placeholder{color:var(--muted);}
+.ob-btn{width:100%;padding:16px;border-radius:12px;font-family:var(--dis);font-size:20px;letter-spacing:3px;cursor:pointer;border:none;background:var(--nagi);color:var(--bg);transition:all 0.2s;margin-top:8px;}
+.ob-btn:active{transform:scale(0.98);}
+.ob-btn.sec{background:transparent;border:1px solid var(--border2);color:var(--muted);margin-top:8px;}
+.ob-progress{display:flex;gap:6px;margin-bottom:32px;}
+.ob-dot{height:3px;flex:1;border-radius:2px;background:var(--border2);}
+.ob-dot.active{background:var(--nagi);}
+.ob-dot.done{background:var(--nagi);opacity:0.4;}
+
+/* ── WAKE SCREEN ── */
+#wakeScreen{position:fixed;inset:0;z-index:800;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 28px 50px;text-align:center;}
+#wakeScreen.night-mode{background:#030305;}
+.ws-top{display:flex;flex-direction:column;align-items:center;}
+.ws-time{font-family:var(--dis);font-size:80px;letter-spacing:2px;color:var(--text);line-height:1;}
+.ws-date{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:6px;}
+.ws-alfred{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-top:32px;text-align:left;max-width:340px;}
+.ws-alfred-label{font-family:var(--mono);font-size:8px;color:var(--acc);letter-spacing:2px;margin-bottom:6px;}
+.ws-alfred-text{font-size:13px;color:var(--muted2);line-height:1.6;}
+.ws-checkin{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px;}
+.ws-checkin-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;}
+.ws-emoji-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.ws-emoji-group{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.ws-emoji-label{font-family:var(--mono);font-size:8px;color:var(--muted);}
+.ws-emojis{display:flex;gap:6px;}
+.ws-emoji{font-size:24px;cursor:pointer;opacity:0.4;transition:all 0.2s;padding:4px;border-radius:8px;}
+.ws-emoji.selected{opacity:1;background:var(--adim);}
+.ws-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+.ws-btn{padding:18px;border-radius:14px;font-family:var(--dis);font-size:22px;letter-spacing:3px;cursor:pointer;border:none;transition:all 0.2s;}
+.ws-btn.up{background:var(--acc);color:var(--bg);}
+.ws-btn.sleep{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:16px;padding:14px;}
+.ws-btn:active{transform:scale(0.97);}
+
+/* ── SILENCE PENALTY ── */
+#silencePenalty{position:fixed;inset:0;z-index:850;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+.sp-title{font-family:var(--dis);font-size:48px;letter-spacing:4px;color:var(--red);margin-bottom:16px;}
+.sp-time{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:32px;}
+.sp-msg{font-size:14px;color:var(--muted2);line-height:1.8;margin-bottom:40px;max-width:300px;}
+.sp-btn{padding:16px 32px;border-radius:12px;font-family:var(--dis);font-size:18px;letter-spacing:2px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text);}
+
+/* ── APP SHELL ── */
+#app{display:none;flex-direction:column;height:100vh;height:100dvh;}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fadeIn 0.25s ease;}
+.screen.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── ALFRED BAR ── */
+.alfred-bar{background:var(--s1);border-bottom:1px solid var(--border);padding:52px 18px 12px;flex-shrink:0;}
+.alfred-bar-label{font-family:var(--mono);font-size:8px;color:var(--acc);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.alfred-pulse{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.alfred-bar-text{font-size:13px;color:var(--muted2);line-height:1.5;}
+.alfred-bar-sub{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.mode-pill{display:inline-flex;align-items:center;gap:5px;background:var(--adim);border:1px solid var(--ab);border-radius:20px;padding:3px 10px;font-family:var(--mono);font-size:8px;color:var(--acc);cursor:pointer;transition:all 0.3s;}
+.rank-badge{font-family:var(--dis);font-size:14px;color:var(--acc);letter-spacing:1px;}
+
+/* ── SCROLL ── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px 18px 100px;}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;padding:8px 10px calc(env(safe-area-inset-bottom)+8px);background:rgba(6,6,8,0.96);border-top:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:100;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 6px;border-radius:10px;transition:all 0.2s;opacity:0.35;min-width:44px;}
+.nav-btn.active{opacity:1;}
+.nav-btn.active .nav-iw{background:var(--adim);border-color:var(--ab);}
+.nav-iw{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all 0.3s;}
+.nav-lbl{font-family:var(--mono);font-size:7px;color:var(--muted);}
+.nav-btn.active .nav-lbl{color:var(--acc);}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+.card-title{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.card2{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
+
+/* ── STAT GRID ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px;}
+.stat-val{font-family:var(--dis);font-size:28px;color:var(--acc);line-height:1;transition:color 0.4s;}
+.stat-lbl{font-family:var(--mono);font-size:7px;color:var(--muted);margin-top:2px;}
+.streak-bar{display:flex;gap:3px;margin-top:6px;}
+.streak-day{flex:1;height:3px;border-radius:2px;background:var(--s3);}
+.streak-day.hit{background:var(--acc);}
+
+/* ── TASK ROW ── */
+.task-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.task-row:last-child{border-bottom:none;}
+.task-check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--ab);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;margin-top:1px;}
+.task-check.done{background:var(--acc);border-color:var(--acc);}
+.task-check.done::after{content:'✓';font-size:10px;color:var(--bg);font-weight:700;}
+.task-info{flex:1;}
+.task-name{font-size:13px;font-weight:600;line-height:1.3;}
+.task-name.done{opacity:0.3;text-decoration:line-through;}
+.task-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px;}
+.task-chain{font-family:var(--mono);font-size:8px;color:var(--acc);opacity:0.6;margin-top:2px;}
+.task-tag{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:5px;flex-shrink:0;margin-top:2px;}
+.tag-red{background:var(--rdim);color:var(--red);}
+.tag-amber{background:var(--amdim);color:var(--amber);}
+.tag-green{background:var(--gdim);color:var(--green);}
+
+/* ── SCHED ROW ── */
+.sched-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.sched-row:last-child{border-bottom:none;}
+.sched-time{font-family:var(--mono);font-size:9px;color:var(--muted);width:46px;flex-shrink:0;padding-top:2px;}
+.sched-bar{width:2px;border-radius:1px;align-self:stretch;flex-shrink:0;min-height:20px;}
+.sched-content{flex:1;}
+.sched-task{font-size:13px;font-weight:600;line-height:1.3;}
+.sched-cat{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:2px;}
+.sched-now{background:var(--adim);border:1px solid var(--ab);border-radius:10px;padding:8px 10px;margin:-8px -10px;}
+.sched-now .sched-task{color:var(--acc);}
+.now-badge{display:inline-block;background:var(--acc);color:var(--bg);font-family:var(--mono);font-size:7px;padding:2px 5px;border-radius:3px;margin-left:6px;font-weight:700;}
+.override-btn{font-family:var(--mono);font-size:8px;color:var(--muted);cursor:pointer;margin-top:4px;opacity:0.6;}
+.override-btn:active{opacity:1;}
+
+/* ── INPUTS ── */
+.inp{background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s;width:100%;}
+.inp:focus{border-color:var(--ab);}
+.inp::placeholder{color:var(--muted);}
+.inp-row{display:flex;gap:8px;margin-bottom:10px;}
+.btn{background:var(--adim);border:1px solid var(--ab);border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:9px;color:var(--acc);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.btn:active{transform:scale(0.97);}
+.btn-full{width:100%;text-align:center;display:block;padding:13px;}
+.btn-red{background:var(--rdim);border-color:rgba(248,113,113,0.3);color:var(--red);}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:5px;padding:10px 18px;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab{font-family:var(--mono);font-size:8px;padding:5px 11px;border-radius:10px;border:1px solid var(--border);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.tab.active{background:var(--adim);border-color:var(--ab);color:var(--acc);}
+
+/* ── GAP TRACKER ── */
+.gap-row{display:flex;gap:8px;margin-bottom:10px;}
+.gap-card{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:10px 12px;}
+.gap-label{font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:4px;}
+.gap-status{font-family:var(--dis);font-size:16px;letter-spacing:1px;}
+.gap-status.on{color:var(--green);}
+.gap-status.behind{color:var(--red);}
+.gap-status.ahead{color:var(--acc);}
+.gap-detail{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:2px;}
+
+/* ── CLASS RISK ── */
+.risk-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.risk-row:last-child{border-bottom:none;}
+.risk-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.risk-green{background:var(--green);}
+.risk-amber{background:var(--amber);}
+.risk-red{background:var(--red);}
+.risk-name{font-size:12px;font-weight:600;flex:1;}
+.risk-status{font-family:var(--mono);font-size:8px;color:var(--muted);}
+
+/* ── WATER ── */
+.water-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.bottle{font-size:28px;cursor:pointer;opacity:0.3;transition:all 0.2s;}
+.bottle.filled{opacity:1;}
+.bottle:active{transform:scale(0.9);}
+
+/* ── SUPPLEMENT ── */
+.supp-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.supp-item:last-child{border-bottom:none;}
+.supp-check{width:16px;height:16px;border-radius:4px;border:1px solid var(--ab);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.supp-check.done{background:var(--acc);border-color:var(--acc);}
+.supp-check.done::after{content:'✓';font-size:9px;color:var(--bg);}
+.supp-name{font-size:12px;flex:1;}
+.supp-time{font-family:var(--mono);font-size:8px;color:var(--muted);}
+
+/* ── FACTOR MEALS ── */
+.factor-meal{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.factor-meal:last-child{border-bottom:none;}
+.factor-emoji{font-size:20px;flex-shrink:0;}
+.factor-name{font-size:12px;flex:1;}
+.factor-count{font-family:var(--mono);font-size:9px;color:var(--muted);}
+.factor-used{opacity:0.3;text-decoration:line-through;}
+
+/* ── KAISER ── */
+.kaiser-card{background:linear-gradient(135deg,rgba(248,113,113,0.06),rgba(13,13,21,0));border:1px solid rgba(248,113,113,0.15);border-radius:14px;padding:14px;margin-bottom:10px;}
+.kaiser-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.kaiser-name{font-family:var(--dis);font-size:20px;letter-spacing:2px;color:var(--red);}
+.kaiser-rank{font-family:var(--mono);font-size:9px;color:var(--muted);}
+.kaiser-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.kaiser-stat{background:rgba(248,113,113,0.06);border-radius:8px;padding:8px;text-align:center;}
+.kaiser-stat-val{font-family:var(--dis);font-size:18px;color:var(--red);}
+.kaiser-stat-lbl{font-family:var(--mono);font-size:7px;color:var(--muted);}
+.kaiser-alfred{font-size:12px;color:var(--muted2);line-height:1.6;font-style:italic;border-top:1px solid rgba(248,113,113,0.1);padding-top:10px;}
+
+/* ── EGO SCORE ── */
+.ego-score-display{text-align:center;padding:20px 0;}
+.ego-num{font-family:var(--dis);font-size:80px;color:var(--acc);line-height:1;}
+.ego-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px;}
+.ego-bar{height:4px;background:var(--s3);border-radius:2px;margin:12px 0;overflow:hidden;}
+.ego-fill{height:100%;border-radius:2px;background:var(--acc);transition:width 1s ease;}
+
+/* ── SPIRITUAL ── */
+.spirit-card{background:linear-gradient(135deg,rgba(176,126,247,0.06),rgba(13,13,21,0));border:1px solid rgba(176,126,247,0.15);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;}
+.spirit-compact{font-size:12px;color:var(--muted2);line-height:1.8;}
+.spirit-line{display:flex;align-items:baseline;gap:6px;}
+.spirit-icon{font-size:11px;}
+.spirit-alfred{font-family:var(--mono);font-size:10px;color:rgba(176,126,247,0.8);margin-top:8px;font-style:italic;}
+.spirit-expand{display:none;margin-top:12px;border-top:1px solid rgba(176,126,247,0.1);padding-top:12px;}
+.spirit-expand.open{display:block;}
+.spirit-full-line{font-size:12px;color:var(--muted2);line-height:1.8;margin-bottom:6px;}
+
+/* ── CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.chat-msgs::-webkit-scrollbar{display:none;}
+.bubble{max-width:84%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.5;}
+.bubble.alfred{background:var(--s1);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px;}
+.bubble.alfred .sender{font-family:var(--mono);font-size:8px;color:var(--acc);margin-bottom:4px;letter-spacing:1px;}
+.bubble.user{background:var(--adim);border:1px solid var(--ab);align-self:flex-end;border-bottom-right-radius:3px;}
+.chat-input-wrap{padding:10px 16px calc(env(safe-area-inset-bottom)+80px);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:rgba(6,6,8,0.98);}
+.chat-inp{flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:20px;padding:10px 14px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;resize:none;max-height:80px;}
+.chat-inp:focus{border-color:var(--ab);}
+.chat-inp::placeholder{color:var(--muted);}
+.send-btn{width:38px;height:38px;border-radius:50%;background:var(--acc);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--bg);font-weight:700;flex-shrink:0;transition:all 0.2s;}
+.send-btn:active{transform:scale(0.94);}
+.send-btn:disabled{opacity:0.4;}
+.typing{display:flex;gap:4px;padding:4px 0;}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--acc);opacity:0.4;animation:bounce 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-5px);opacity:1}}
+.voice-btn{width:38px;height:38px;border-radius:50%;background:var(--s2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all 0.2s;}
+.voice-btn.recording{background:var(--rdim);border-color:rgba(248,113,113,0.3);animation:voicePulse 1s infinite;}
+@keyframes voicePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* ── GYM ── */
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.split-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.split-card.today{border-color:var(--ab);background:var(--adim);}
+.split-icon{font-size:22px;margin-bottom:4px;}
+.split-name{font-family:var(--mono);font-size:8px;color:var(--muted);}
+.split-card.today .split-name{color:var(--acc);}
+.exercise-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.exercise-row:last-child{border-bottom:none;}
+.exercise-name{font-size:12px;flex:1;}
+.exercise-inp{width:52px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-family:var(--mono);font-size:10px;color:var(--text);outline:none;text-align:center;}
+.exercise-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);}
+.pr-badge{font-family:var(--mono);font-size:7px;background:var(--adim);color:var(--acc);padding:2px 5px;border-radius:4px;}
+
+/* ── SLEEP ── */
+.sleep-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sleep-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.sleep-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:6px;}
+.time-inp{background:transparent;border:none;outline:none;font-family:var(--dis);font-size:24px;color:var(--acc);text-align:center;width:100%;cursor:pointer;}
+
+/* ── FINANCE ── */
+.balance-display{text-align:center;padding:16px 0;}
+.balance-num{font-family:var(--dis);font-size:48px;color:var(--acc);}
+.balance-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:2px;}
+.spend-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);}
+.spend-row:last-child{border-bottom:none;}
+.spend-amount{font-family:var(--dis);font-size:18px;color:var(--red);}
+.spend-cat{font-family:var(--mono);font-size:8px;color:var(--muted);}
+.spend-date{font-family:var(--mono);font-size:8px;color:var(--muted);margin-left:auto;}
+
+/* ── BODY ── */
+.measurement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.meas-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.meas-val{font-family:var(--dis);font-size:20px;color:var(--acc);}
+.meas-lbl{font-family:var(--mono);font-size:7px;color:var(--muted);margin-top:2px;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:22px 22px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom)+20px);width:100%;max-width:500px;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:var(--dis);font-size:20px;letter-spacing:2px;margin-bottom:14px;}
+.modal-close{float:right;cursor:pointer;opacity:0.5;font-size:16px;}
+
+/* ── BRIEFING ── */
+#briefingScreen{position:fixed;inset:0;z-index:700;background:var(--bg);display:none;flex-direction:column;padding:60px 28px 40px;overflow-y:auto;}
+.brief-header{font-family:var(--dis);font-size:32px;letter-spacing:3px;color:var(--acc);margin-bottom:4px;}
+.brief-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:24px;}
+.brief-content{font-size:14px;color:var(--muted2);line-height:1.9;margin-bottom:24px;}
+.brief-affirmation{background:var(--adim);border:1px solid var(--ab);border-radius:12px;padding:14px;margin-bottom:20px;}
+.brief-aff-label{font-family:var(--mono);font-size:8px;color:var(--acc);letter-spacing:1px;margin-bottom:6px;}
+.brief-aff-text{font-size:13px;color:var(--text);line-height:1.6;}
+.brief-intention{margin-bottom:20px;}
+.brief-int-label{font-size:13px;color:var(--muted2);margin-bottom:10px;}
+.brief-continue{width:100%;padding:16px;border-radius:12px;font-family:var(--dis);font-size:18px;letter-spacing:3px;cursor:pointer;border:none;background:var(--acc);color:var(--bg);transition:all 0.2s;margin-top:10px;}
+.brief-continue:active{transform:scale(0.98);}
+
+/* ── LOW ENERGY MODE ── */
+.low-energy-btn{width:100%;padding:10px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);font-family:var(--mono);font-size:9px;color:var(--amber);cursor:pointer;text-align:center;margin-bottom:10px;transition:all 0.2s;}
+.low-energy-btn:active{transform:scale(0.98);}
+
+/* ── DEBRIEF ── */
+#debriefScreen{position:fixed;inset:0;z-index:700;background:var(--bg);display:none;flex-direction:column;padding:60px 28px 40px;}
+.debrief-title{font-family:var(--dis);font-size:32px;letter-spacing:3px;color:var(--acc);margin-bottom:4px;}
+.debrief-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:28px;}
+.debrief-q{font-size:15px;color:var(--muted2);line-height:1.7;margin-bottom:16px;}
+.debrief-inp{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:14px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;resize:none;height:100px;margin-bottom:16px;}
+.debrief-inp:focus{border-color:var(--ab);}
+.wins-label{font-size:13px;color:var(--muted2);margin-bottom:8px;}
+.debrief-score{font-family:var(--dis);font-size:60px;text-align:center;color:var(--acc);margin:16px 0 4px;}
+.debrief-score-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:20px;}
+
+/* ── EMERGENCY FOCUS ── */
+#emergencyBanner{display:none;background:rgba(248,113,113,0.1);border-bottom:1px solid rgba(248,113,113,0.2);padding:8px 18px;flex-shrink:0;}
+#emergencyBanner.active{display:block;}
+.emergency-text{font-family:var(--mono);font-size:9px;color:var(--red);display:flex;align-items:center;justify-content:space-between;}
+
+/* ── DESKTOP ── */
+@media(min-width:768px){
+  #app{flex-direction:row;}
+  .nav{position:relative;flex-direction:column;width:80px;height:100vh;border-top:none;border-right:1px solid var(--border);padding:60px 0 20px;justify-content:flex-start;gap:8px;}
+  .nav-btn{flex-direction:column;width:100%;border-radius:0;padding:10px 0;}
+  .screen{flex:1;}
+  .alfred-bar{padding:24px 24px 14px;}
+  .scroll{padding:16px 24px 40px;}
+  .stat-grid{grid-template-columns:repeat(4,1fr);}
+  .chat-input-wrap{padding:10px 24px 20px;}
+}
+
+/* ── UTILS ── */
+.divider{height:1px;background:var(--border);margin:14px 0;}
+.section-gap{height:16px;}
+select.inp{appearance:none;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <div class="ob-logo">ALFRED</div>
+  <div class="ob-sub">THE FACILITY IS OPEN</div>
+  <div id="obContent"></div>
+</div>
+
+<!-- WAKE SCREEN -->
+<div id="wakeScreen">
+  <div class="ws-top">
+    <div class="ws-time" id="wsTime">--:--</div>
+    <div class="ws-date" id="wsDate"></div>
+    <div class="ws-alfred">
+      <div class="ws-alfred-label">● ALFRED</div>
+      <div class="ws-alfred-text" id="wsAlfredQuote">Loading...</div>
+    </div>
+  </div>
+  <div class="ws-checkin">
+    <div class="ws-checkin-label">MORNING CHECK-IN</div>
+    <div class="ws-emoji-row">
+      <div class="ws-emoji-group">
+        <div class="ws-emoji-label">ENERGY</div>
+        <div class="ws-emojis" id="energyEmojis">
+          <div class="ws-emoji" data-group="energy" data-val="1" onclick="selectEmoji(this)">😴</div>
+          <div class="ws-emoji" data-group="energy" data-val="2" onclick="selectEmoji(this)">😑</div>
+          <div class="ws-emoji" data-group="energy" data-val="3" onclick="selectEmoji(this)">😐</div>
+          <div class="ws-emoji" data-group="energy" data-val="4" onclick="selectEmoji(this)">😊</div>
+          <div class="ws-emoji" data-group="energy" data-val="5" onclick="selectEmoji(this)">⚡</div>
+        </div>
+      </div>
+      <div class="ws-emoji-group">
+        <div class="ws-emoji-label">FOCUS</div>
+        <div class="ws-emojis" id="focusEmojis">
+          <div class="ws-emoji" data-group="focus" data-val="1" onclick="selectEmoji(this)">🌫️</div>
+          <div class="ws-emoji" data-group="focus" data-val="2" onclick="selectEmoji(this)">😵</div>
+          <div class="ws-emoji" data-group="focus" data-val="3" onclick="selectEmoji(this)">😶</div>
+          <div class="ws-emoji" data-group="focus" data-val="4" onclick="selectEmoji(this)">🎯</div>
+          <div class="ws-emoji" data-group="focus" data-val="5" onclick="selectEmoji(this)">🔥</div>
+        </div>
+      </div>
+      <div class="ws-emoji-group">
+        <div class="ws-emoji-label">MOOD</div>
+        <div class="ws-emojis" id="moodEmojis">
+          <div class="ws-emoji" data-group="mood" data-val="1" onclick="selectEmoji(this)">😔</div>
+          <div class="ws-emoji" data-group="mood" data-val="2" onclick="selectEmoji(this)">😕</div>
+          <div class="ws-emoji" data-group="mood" data-val="3" onclick="selectEmoji(this)">😐</div>
+          <div class="ws-emoji" data-group="mood" data-val="4" onclick="selectEmoji(this)">😌</div>
+          <div class="ws-emoji" data-group="mood" data-val="5" onclick="selectEmoji(this)">😤</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ws-btns">
+    <button class="ws-btn up" onclick="wakeUp()">I'M UP</button>
+    <button class="ws-btn sleep" onclick="goToSleep()">🌙 Sleep</button>
+  </div>
+</div>
+
+<!-- SILENCE PENALTY -->
+<div id="silencePenalty">
+  <div class="sp-title">ABSENT.</div>
+  <div class="sp-time" id="spTime"></div>
+  <div class="sp-msg" id="spMsg"></div>
+  <button class="sp-btn" onclick="dismissSilencePenalty()">I'M BACK</button>
+</div>
+
+<!-- MORNING BRIEFING -->
+<div id="briefingScreen">
+  <div class="brief-header">MISSION BRIEF</div>
+  <div class="brief-sub" id="briefDate"></div>
+  <div class="brief-content" id="briefContent">Alfred is loading your day...</div>
+  <div class="brief-affirmation">
+    <div class="brief-aff-label">TODAY'S READ</div>
+    <div class="brief-aff-text" id="briefAffirmation"></div>
+  </div>
+  <div class="brief-intention">
+    <div class="brief-int-label">Set your intention for today:</div>
+    <input class="inp" id="intentionInp" placeholder="One sentence. What will you do today?">
+  </div>
+  <button class="brief-continue" onclick="enterApp()">ENTER THE FACILITY</button>
+</div>
+
+<!-- DEBRIEF SCREEN -->
+<div id="debriefScreen">
+  <div class="debrief-title">END OF DAY</div>
+  <div class="debrief-sub" id="debriefDate"></div>
+  <div class="debrief-q" id="debriefQuestion"></div>
+  <textarea class="debrief-inp" id="debriefAnswer" placeholder="Your answer..."></textarea>
+  <div class="wins-label">One thing that went right today:</div>
+  <input class="inp" id="winsInp" placeholder="What worked?" style="margin-bottom:16px;">
+  <div id="debriefScore" style="display:none;">
+    <div class="debrief-score" id="scoreNum"></div>
+    <div class="debrief-score-label">EGO SCORE</div>
+    <div class="brief-content" id="debriefAlfredResponse" style="margin-bottom:16px;"></div>
+  </div>
+  <button class="brief-continue" id="debriefBtn" onclick="submitDebrief()" style="background:var(--s2);border:1px solid var(--border2);color:var(--text);">SUBMIT</button>
+  <button class="brief-continue" id="sleepBtn" onclick="lockForSleep()" style="display:none;margin-top:10px;">GOOD NIGHT</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- EMERGENCY BANNER -->
+  <div id="emergencyBanner">
+    <div class="emergency-text">
+      <span>⚡ EMERGENCY FOCUS MODE ACTIVE</span>
+      <span onclick="toggleEmergency()" style="cursor:pointer;">EXIT</span>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="alfred-bar">
+      <div class="alfred-bar-label"><div class="alfred-pulse"></div>ALFRED</div>
+      <div class="alfred-bar-text" id="homeAlfredBar">Observing...</div>
+      <div class="alfred-bar-sub">
+        <div class="mode-pill" onclick="toggleMode()" id="modePill">◈ NAGI MODE</div>
+        <div class="rank-badge" id="homeRank">RANK 287</div>
+      </div>
+    </div>
+    <div class="scroll">
+      <!-- LOW ENERGY -->
+      <div class="low-energy-btn" onclick="toggleLowEnergy()" id="lowEnergyBtn">⚡ LOW ENERGY MODE — TAP TO ACTIVATE</div>
+
+      <!-- GAP TRACKER -->
+      <div class="gap-row">
+        <div class="gap-card">
+          <div class="gap-label">GPA → 3.25</div>
+          <div class="gap-status behind" id="gpaGap">BEHIND</div>
+          <div class="gap-detail">2.75 → 3.25</div>
+        </div>
+        <div class="gap-card">
+          <div class="gap-label">WEIGHT → 170</div>
+          <div class="gap-status behind" id="weightGap">BEHIND</div>
+          <div class="gap-detail" id="weightGapDetail">155 → 170</div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="egoScoreHome">--</div>
+          <div class="stat-lbl">EGO SCORE</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="streakHome">0</div>
+          <div class="stat-lbl">DAY STREAK</div>
+          <div class="streak-bar" id="streakBar"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="tasksHome">0/0</div>
+          <div class="stat-lbl">TASKS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="gymStreakHome">0</div>
+          <div class="stat-lbl">GYM STREAK</div>
+        </div>
+      </div>
+
+      <!-- WATER -->
+      <div class="card">
+        <div class="card-title">WATER — 96OZ GOAL</div>
+        <div class="water-row" id="waterBottles"></div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted)" id="waterStatus">0 / 3 bottles</div>
+      </div>
+
+      <!-- SPIRITUAL -->
+      <div class="spirit-card" onclick="toggleSpirit(this)">
+        <div class="card-title" style="margin-bottom:6px;">TODAY'S READ</div>
+        <div class="spirit-compact" id="spiritCompact">Loading...</div>
+        <div class="spirit-alfred" id="spiritAlfred"></div>
+        <div class="spirit-expand" id="spiritExpand"></div>
+      </div>
+
+      <!-- DAILY ANCHOR -->
+      <div class="card">
+        <div class="card-title">DAILY ANCHOR</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.5" id="dailyAnchor">Loading...</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:4px;">Non-negotiable. Do this first.</div>
+      </div>
+
+      <!-- CLASS RISK -->
+      <div class="card">
+        <div class="card-title">CLASS STATUS</div>
+        <div id="classRisk"></div>
+      </div>
+
+      <!-- FACTOR MEALS TODAY -->
+      <div class="card" id="factorHomeCard">
+        <div class="card-title">TODAY'S FACTOR MEALS</div>
+        <div id="factorToday"></div>
+      </div>
+
+      <!-- KAISER -->
+      <div class="kaiser-card">
+        <div class="kaiser-header">
+          <div class="kaiser-name">KAISER</div>
+          <div class="kaiser-rank">RANK 286</div>
+        </div>
+        <div class="kaiser-stats">
+          <div class="kaiser-stat">
+            <div class="kaiser-stat-val" id="kaiserWeight">165</div>
+            <div class="kaiser-stat-lbl">LBS</div>
+          </div>
+          <div class="kaiser-stat">
+            <div class="kaiser-stat-val" id="kaiserGPA">3.1</div>
+            <div class="kaiser-stat-lbl">GPA</div>
+          </div>
+          <div class="kaiser-stat">
+            <div class="kaiser-stat-val" id="kaiserGym">5</div>
+            <div class="kaiser-stat-lbl">GYM/WK</div>
+          </div>
+        </div>
+        <div class="kaiser-alfred" id="kaiserAlfred">He's ahead. For now.</div>
+      </div>
+
+      <!-- TODAY'S TASKS -->
+      <div class="card">
+        <div class="card-title">TODAY'S TASKS</div>
+        <div id="homeTasks"></div>
+      </div>
+
+      <!-- SUPPLEMENTS -->
+      <div class="card">
+        <div class="card-title">SUPPLEMENTS</div>
+        <div class="card-title" style="margin-bottom:6px;color:var(--acc);">MORNING</div>
+        <div id="suppMorning"></div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-bottom:6px;color:var(--acc);">PRE-GYM</div>
+        <div id="suppGym"></div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-bottom:6px;color:var(--acc);">NIGHT</div>
+        <div id="suppNight"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY -->
+  <div class="screen" id="s-daily">
+    <div class="alfred-bar">
+      <div class="alfred-bar-label"><div class="alfred-pulse"></div>ALFRED</div>
+      <div class="alfred-bar-text" id="dailyAlfredBar">Your schedule is set.</div>
+      <div class="alfred-bar-sub">
+        <div class="mode-pill" onclick="toggleMode()">◈ NAGI MODE</div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('daily','schedule')" id="daily-tab-schedule">SCHEDULE</div>
+      <div class="tab" onclick="switchTab('daily','alfred')" id="daily-tab-alfred">ALFRED</div>
+    </div>
+
+    <!-- SCHEDULE TAB -->
+    <div id="daily-content-schedule" class="scroll">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">TODAY'S MISSION</div>
+        <div class="btn" onclick="showModal('emergencyModal')" style="font-size:8px;padding:6px 10px;border-color:rgba(248,113,113,0.3);color:var(--red);background:var(--rdim);">⚡ EMERGENCY</div>
+      </div>
+      <div id="schedList"></div>
+    </div>
+
+    <!-- ALFRED CHAT TAB -->
+    <div id="daily-content-alfred" style="display:none;flex:1;overflow:hidden;flex-direction:column;" class="chat-wrap">
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-input-wrap">
+        <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+        <textarea class="chat-inp" id="chatInp" placeholder="Talk to Alfred..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACK -->
+  <div class="screen" id="s-track">
+    <div class="alfred-bar" style="padding-bottom:10px;">
+      <div class="alfred-bar-label"><div class="alfred-pulse"></div>ALFRED</div>
+      <div class="alfred-bar-text" id="trackAlfredBar">Log everything. The data doesn't lie.</div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('track','hw')" id="track-tab-hw">HW</div>
+      <div class="tab" onclick="switchTab('track','gym')" id="track-tab-gym">GYM</div>
+      <div class="tab" onclick="switchTab('track','meals')" id="track-tab-meals">MEALS</div>
+      <div class="tab" onclick="switchTab('track','sleep')" id="track-tab-sleep">SLEEP</div>
+      <div class="tab" onclick="switchTab('track','canvas')" id="track-tab-canvas">CANVAS</div>
+      <div class="tab" onclick="switchTab('track','finance')" id="track-tab-finance">FINANCE</div>
+      <div class="tab" onclick="switchTab('track','checkin')" id="track-tab-checkin">CHECK-IN</div>
+    </div>
+    <div class="scroll">
+
+      <!-- HW -->
+      <div id="track-content-hw">
+        <div class="inp-row">
+          <input class="inp" id="hwName" placeholder="Assignment name...">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <input class="inp" type="date" id="hwDue">
+          <select class="inp" id="hwClass">
+            <option value="DRAM1310">DRAM 1310</option>
+            <option value="ENGL1302">ENGL 1302</option>
+            <option value="ENTR3310">ENTR 3310</option>
+            <option value="GOVT2305">GOVT 2305</option>
+            <option value="MARK3337">MARK 3337</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <select class="inp" id="hwType">
+            <option value="discussion">Discussion Post</option>
+            <option value="quiz">Quiz</option>
+            <option value="essay">Essay</option>
+            <option value="research">Research Assignment</option>
+            <option value="exam">Exam</option>
+            <option value="project">Project</option>
+          </select>
+          <input class="inp" type="number" id="hwGrade" placeholder="Grade (if received)">
+        </div>
+        <button class="btn btn-full" onclick="addHW()" style="margin-bottom:14px;">+ ADD ASSIGNMENT</button>
+        <div class="divider"></div>
+        <div id="hwList"></div>
+      </div>
+
+      <!-- GYM -->
+      <div id="track-content-gym" style="display:none;">
+        <div class="card-title">TODAY'S SPLIT</div>
+        <div class="split-grid" id="gymSplit"></div>
+        <div class="card-title" style="margin-bottom:8px;">LOG EXERCISES</div>
+        <div id="exerciseList"></div>
+        <button class="btn btn-full" onclick="addExercise()" style="margin-bottom:10px;margin-top:8px;">+ ADD EXERCISE</button>
+        <button class="btn btn-full" onclick="logGymSession()" style="margin-bottom:14px;">✓ COMPLETE SESSION</button>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-bottom:8px;">GYM HISTORY</div>
+        <div id="gymHistory"></div>
+      </div>
+
+      <!-- MEALS -->
+      <div id="track-content-meals" style="display:none;">
+        <div class="card-title" style="color:var(--amber)">THIS WEEK — FACTOR MEALS</div>
+        <div id="factorMealList" style="margin-bottom:14px;"></div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-top:10px;">MEAL 1</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="inp" id="meal1Inp" placeholder="What did you eat?">
+          <button class="btn" onclick="logMeal(1)">LOG</button>
+        </div>
+        <div class="card-title">MEAL 2</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="inp" id="meal2Inp" placeholder="What did you eat?">
+          <button class="btn" onclick="logMeal(2)">LOG</button>
+        </div>
+        <div class="card-title">PROTEIN SHAKE</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="inp" id="meal3Inp" placeholder="Protein shake">
+          <button class="btn" onclick="logMeal(3)">LOG</button>
+        </div>
+        <div class="card-title">CALORIES</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <input class="inp" type="number" id="calorieInp" placeholder="Total calories today">
+          <button class="btn" onclick="logCalories()">LOG</button>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-top:10px;">TODAY'S LOG</div>
+        <div id="mealLog"></div>
+      </div>
+
+      <!-- SLEEP -->
+      <div id="track-content-sleep" style="display:none;">
+        <div class="sleep-grid">
+          <div class="sleep-card">
+            <div class="sleep-lbl">BEDTIME</div>
+            <input type="time" class="time-inp" id="bedtimeInp" value="23:00" oninput="calcSleep()">
+          </div>
+          <div class="sleep-card">
+            <div class="sleep-lbl">WAKE UP</div>
+            <input type="time" class="time-inp" id="wakeInp" value="10:30" oninput="calcSleep()">
+          </div>
+        </div>
+        <div class="card" style="text-align:center;margin-bottom:12px;">
+          <div class="card-title">DURATION</div>
+          <div style="font-family:var(--dis);font-size:40px;color:var(--acc)" id="sleepDur">—</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted)" id="sleepMsg"></div>
+        </div>
+        <button class="btn btn-full" onclick="logSleep()" style="margin-bottom:14px;">✓ LOG SLEEP</button>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-top:10px;">SLEEP HISTORY</div>
+        <div id="sleepLog"></div>
+      </div>
+
+      <!-- CANVAS -->
+      <div id="track-content-canvas" style="display:none;">
+        <div class="card2">
+          <div class="card-title">UH CANVAS API</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">Get your token from UH Canvas → Settings → Approved Integrations → New Access Token</div>
+          <div style="display:flex;gap:8px;">
+            <input class="inp" id="canvasToken" placeholder="Paste your API token...">
+            <button class="btn" onclick="saveCanvasToken()">SAVE</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">GRADE TRACKER</div>
+        <div id="gradeTracker"></div>
+        <div class="divider"></div>
+        <div class="card-title">GPA PROJECTION</div>
+        <div class="card2" id="gpaProjection">
+          <div style="font-family:var(--dis);font-size:32px;color:var(--acc)" id="projectedGPA">2.75</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">CURRENT PROJECTED GPA</div>
+          <div style="font-size:12px;color:var(--muted2);margin-top:8px;line-height:1.6" id="gpaNote">Keep submitting. Every assignment counts toward 3.25.</div>
+        </div>
+      </div>
+
+      <!-- FINANCE -->
+      <div id="track-content-finance" style="display:none;">
+        <div class="balance-display">
+          <div class="balance-num" id="balanceDisplay">$513.75</div>
+          <div class="balance-lbl">CURRENT BALANCE</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <input class="inp" type="number" id="spendAmount" placeholder="Amount ($)">
+          <select class="inp" id="spendCat">
+            <option value="food">🍔 Food</option>
+            <option value="subscriptions">📱 Subscriptions</option>
+            <option value="going_out">🎉 Going Out</option>
+            <option value="supplements">💊 Supplements</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        <button class="btn btn-full" onclick="logSpend()" style="margin-bottom:14px;">LOG SPENDING</button>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-top:10px;">SPENDING LOG</div>
+        <div id="spendLog"></div>
+      </div>
+
+      <!-- CHECK-IN -->
+      <div id="track-content-checkin" style="display:none;">
+        <div class="card-title">WEEKLY PATTERN REPORT</div>
+        <div class="card2" id="patternReport" style="font-size:12px;color:var(--muted2);line-height:1.7;">Check in daily to build your pattern report.</div>
+        <div class="divider"></div>
+        <div class="card-title">CHECK-IN HISTORY</div>
+        <div id="checkinHistory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROW -->
+  <div class="screen" id="s-grow">
+    <div class="alfred-bar" style="padding-bottom:10px;">
+      <div class="alfred-bar-label"><div class="alfred-pulse"></div>ALFRED</div>
+      <div class="alfred-bar-text" id="growAlfredBar">Build the body. Build the career. Same discipline.</div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('grow','body')" id="grow-tab-body">BODY</div>
+      <div class="tab" onclick="switchTab('grow','career')" id="grow-tab-career">CAREER</div>
+      <div class="tab" onclick="switchTab('grow','vault')" id="grow-tab-vault">VAULT</div>
+    </div>
+    <div class="scroll">
+
+      <!-- BODY -->
+      <div id="grow-content-body">
+        <div class="card-title">DAILY LOG</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <input class="inp" type="number" id="weightLog" placeholder="Weight (lbs)">
+          <input class="inp" type="number" id="calorieLog" placeholder="Calories">
+        </div>
+        <button class="btn btn-full" onclick="logBodyStats()" style="margin-bottom:14px;">LOG STATS</button>
+        <div class="divider"></div>
+        <div class="card-title" style="margin-top:10px;">MEASUREMENTS (inches)</div>
+        <div class="measurement-grid">
+          <div class="meas-card">
+            <input class="time-inp" id="measChest" placeholder="--" style="font-size:20px;">
+            <div class="meas-lbl">CHEST</div>
+          </div>
+          <div class="meas-card">
+            <input class="time-inp" id="measWaist" placeholder="--" style="font-size:20px;">
+            <div class="meas-lbl">WAIST</div>
+          </div>
+          <div class="meas-card">
+            <input class="time-inp" id="measArms" placeholder="--" style="font-size:20px;">
+            <div class="meas-lbl">ARMS</div>
+          </div>
+          <div class="meas-card">
+            <input class="time-inp" id="measShoulders" placeholder="--" style="font-size:20px;">
+            <div class="meas-lbl">SHOULDERS</div>
+          </div>
+          <div class="meas-card">
+            <input class="time-inp" id="measLegs" placeholder="--" style="font-size:20px;">
+            <div class="meas-lbl">LEGS</div>
+          </div>
+          <div class="meas-card" style="cursor:pointer;" onclick="logMeasurements()">
+            <div class="meas-val" style="font-size:16px;color:var(--acc);">LOG</div>
+            <div class="meas-lbl">SAVE</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">PROGRESS</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="currentWeight">155</div>
+            <div class="stat-lbl">CURRENT LBS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="lbsToGoal">15</div>
+            <div class="stat-lbl">LBS TO GOAL</div>
+          </div>
+        </div>
+        <div class="card2" id="bodyTargetDate">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;">TARGET DATE AT CURRENT PACE</div>
+          <div style="font-size:13px;color:var(--muted2);">Log your weight daily for Alfred to calculate your exact target date.</div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">ALFRED'S BODY ASSESSMENT</div>
+        <div class="card2" id="bodyAssessment" style="font-size:13px;color:var(--muted2);line-height:1.7;">Log your stats for Alfred's assessment.</div>
+        <div class="divider"></div>
+        <div class="card-title">PHOTO LOG</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">Weekly progress photos. Private. Alfred compares after 4 weeks.</div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="addPhoto(this)">
+        <button class="btn btn-full" onclick="document.getElementById('photoInput').click()" style="margin-bottom:10px;">📷 ADD PHOTO</button>
+        <div id="photoGallery" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+      </div>
+
+      <!-- CAREER -->
+      <div id="grow-content-career" style="display:none;">
+        <div class="card-title">RESUME</div>
+        <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" style="display:none;" onchange="uploadResume(this)">
+        <button class="btn btn-full" onclick="document.getElementById('resumeInput').click()" style="margin-bottom:10px;">📄 UPLOAD RESUME</button>
+        <div class="card2" id="resumeStatus" style="font-size:12px;color:var(--muted);line-height:1.6;">Upload your resume. Alfred will analyze every bullet point and give you specific feedback for consulting and MIS roles.</div>
+        <div class="divider"></div>
+        <div class="card-title">CERTIFICATION ROADMAP</div>
+        <div id="certRoadmap"></div>
+        <div class="divider"></div>
+        <div class="card-title">INTERNSHIP PIPELINE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <input class="inp" id="internCompany" placeholder="Company">
+          <input class="inp" id="internRole" placeholder="Role">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <input class="inp" type="date" id="internDeadline">
+          <select class="inp" id="internStatus">
+            <option value="researching">Researching</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="offer">Offer</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <button class="btn btn-full" onclick="addInternship()" style="margin-bottom:10px;">+ ADD APPLICATION</button>
+        <div id="internList"></div>
+        <div class="divider"></div>
+        <div class="card-title">WEEKLY CAREER TASK</div>
+        <div class="card2" id="weeklyCareerTask" style="font-size:13px;color:var(--muted2);line-height:1.7;">Loading Alfred's career task for this week...</div>
+        <div class="divider"></div>
+        <div class="card-title">ACADEMIC TIMELINE</div>
+        <div id="academicTimeline"></div>
+        <div class="divider"></div>
+        <div class="card-title">LINKEDIN</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="inp" id="linkedinUrl" placeholder="linkedin.com/in/yourprofile">
+          <button class="btn" onclick="saveLinkedIn()">SAVE</button>
+        </div>
+        <div class="card2" id="linkedinTip" style="font-size:12px;color:var(--muted2);line-height:1.6;">Connect LinkedIn so Alfred can track your profile and give you weekly networking tasks.</div>
+      </div>
+
+      <!-- VAULT -->
+      <div id="grow-content-vault" style="display:none;">
+        <div class="card-title">TRANSFORMATION ARC</div>
+        <div class="card2" id="transformArc">
+          <div style="font-family:var(--dis);font-size:22px;color:var(--acc);margin-bottom:4px;" id="arcPhase">PRE-WILDCARD</div>
+          <div style="font-size:12px;color:var(--muted2);line-height:1.6;" id="arcDesc">You've entered the facility. The arc begins now. Nagi energy detected — natural talent, inconsistent activation. The question is whether you decide.</div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">ALFRED'S WALL</div>
+        <div class="card2" id="alfredWall" style="font-size:13px;color:var(--muted2);line-height:1.8;">Alfred's weekly scouting report will appear here after your first full week.</div>
+        <div class="divider"></div>
+        <div class="card-title">KAISER — RIVAL STORY</div>
+        <div class="card2" style="font-size:12px;color:var(--muted2);line-height:1.7;">
+          <div style="font-family:var(--dis);font-size:18px;color:var(--red);margin-bottom:8px;">THE STORY SO FAR</div>
+          <div id="kaiserStory">Kaiser entered the facility one spot above you. Rank 286. Same age. Same potential. Different choices. He's been executing while you've been deciding. He doesn't know you exist. That's the problem — and the opportunity. Catch him.</div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">SEMESTER SCOREBOARD</div>
+        <div id="semesterScoreboard"></div>
+        <div class="divider"></div>
+        <div class="card-title">ALFRED'S PREDICTION</div>
+        <div class="card2" id="alfredPrediction" style="font-size:13px;color:var(--muted2);line-height:1.7;">Log data for 7 days and Alfred will generate your 30/60/90 day projection.</div>
+        <div class="divider"></div>
+        <div class="card-title">READING TRACKER</div>
+        <div id="readingTracker"></div>
+        <div class="divider"></div>
+        <div class="card-title">SELF REFLECTION</div>
+        <div class="card2" id="selfReflection" style="font-size:13px;color:var(--muted2);line-height:1.7;">Weekly deep question from Alfred. Check back Sunday.</div>
+        <div class="divider"></div>
+        <div class="card-title">THE CONTRACT</div>
+        <div id="contractSection"></div>
+        <div class="divider"></div>
+        <div class="card-title">PRE-SLEEP ARCHIVE</div>
+        <div id="sleepArchive"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="s-settings">
+    <div class="alfred-bar" style="padding-bottom:10px;">
+      <div class="alfred-bar-label">⚙ SETTINGS</div>
+      <div class="alfred-bar-text">Configure the facility.</div>
+    </div>
+    <div class="scroll">
+      <div class="card-title">PROFILE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <input class="inp" id="settingWeight" placeholder="Current weight (lbs)" type="number">
+        <input class="inp" id="settingGoal" placeholder="Goal weight (lbs)" type="number">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <input class="inp" id="settingGPA" placeholder="Current GPA" type="number" step="0.01">
+        <input class="inp" id="settingCredits" placeholder="Credits completed" type="number">
+      </div>
+      <button class="btn btn-full" onclick="saveProfile()" style="margin-bottom:14px;">SAVE PROFILE</button>
+      <div class="divider"></div>
+      <div class="card-title">SCHEDULE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:4px;">WAKE TARGET</div>
+          <input type="time" class="inp" id="settingWake" value="10:30">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:4px;">SLEEP TARGET</div>
+          <input type="time" class="inp" id="settingSleep" value="23:00">
+        </div>
+      </div>
+      <button class="btn btn-full" onclick="saveScheduleSettings()" style="margin-bottom:14px;">SAVE</button>
+      <div class="divider"></div>
+      <div class="card-title">APPEARANCE</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:8px;">NAGI COLOR</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#7EB8F7;cursor:pointer;border:2px solid transparent;" onclick="setAccentColor('nagi','#7EB8F7','rgba(126,184,247,0.1)','rgba(126,184,247,0.22)')"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#7EC8A0;cursor:pointer;" onclick="setAccentColor('nagi','#7EC8A0','rgba(126,200,160,0.1)','rgba(126,200,160,0.22)')"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#B07EF7;cursor:pointer;" onclick="setAccentColor('nagi','#B07EF7','rgba(176,126,247,0.1)','rgba(176,126,247,0.22)')"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#F7D07E;cursor:pointer;" onclick="setAccentColor('nagi','#F7D07E','rgba(247,208,126,0.1)','rgba(247,208,126,0.22)')"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:8px;">KUNIGAMI COLOR</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#FF5733;cursor:pointer;" onclick="setAccentColor('kuni','#FF5733','rgba(255,87,51,0.1)','rgba(255,87,51,0.22)')"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#FF3355;cursor:pointer;" onclick="setAccentColor('kuni','#FF3355','rgba(255,51,85,0.1)','rgba(255,51,85,0.22)')"></div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#FF8C00;cursor:pointer;" onclick="setAccentColor('kuni','#FF8C00','rgba(255,140,0,0.1)','rgba(255,140,0,0.22)')"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-title">NOTIFICATIONS</div>
+      <button class="btn btn-full" onclick="requestNotifications()" style="margin-bottom:10px;">ENABLE NOTIFICATIONS</button>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">Allow notifications so Alfred can reach you throughout the day with schedule reminders, assignment alerts, and check-ins.</div>
+      <div class="divider"></div>
+      <div class="card-title">CUSTOM TASKS</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input class="inp" id="customTaskInp" placeholder="Add a custom task...">
+        <button class="btn" onclick="addCustomTask()">ADD</button>
+      </div>
+      <div id="customTaskList"></div>
+      <div class="divider"></div>
+      <div class="card-title">DANGER ZONE</div>
+      <button class="btn btn-full btn-red" onclick="resetApp()">RESET ALL DATA</button>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-btn active" onclick="goTo('home')" id="nav-home">
+      <div class="nav-iw">⌂</div>
+      <div class="nav-lbl">HOME</div>
+    </div>
+    <div class="nav-btn" onclick="goTo('daily')" id="nav-daily">
+      <div class="nav-iw">≡</div>
+      <div class="nav-lbl">DAILY</div>
+    </div>
+    <div class="nav-btn" onclick="goTo('track')" id="nav-track">
+      <div class="nav-iw">◎</div>
+      <div class="nav-lbl">TRACK</div>
+    </div>
+    <div class="nav-btn" onclick="goTo('grow')" id="nav-grow">
+      <div class="nav-iw">↑</div>
+      <div class="nav-lbl">GROW</div>
+    </div>
+    <div class="nav-btn" onclick="goTo('settings')" id="nav-settings">
+      <div class="nav-iw">⚙</div>
+      <div class="nav-lbl">SETTINGS</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="overrideModal">
+  <div class="modal">
+    <div class="modal-title">DID SOMETHING ELSE <span class="modal-close" onclick="closeModal('overrideModal')">✕</span></div>
+    <input class="inp" id="overrideWhat" placeholder="What did you do instead?" style="margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <input type="time" class="inp" id="overrideFrom">
+      <input type="time" class="inp" id="overrideTo">
+    </div>
+    <button class="btn btn-full" onclick="logOverride()">LOG IT</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="emergencyModal">
+  <div class="modal">
+    <div class="modal-title">EMERGENCY FOCUS <span class="modal-close" onclick="closeModal('emergencyModal')">✕</span></div>
+    <div style="font-size:13px;color:var(--muted2);line-height:1.7;margin-bottom:16px;">Activating Emergency Focus Mode. Alfred will lock all non-essential screens and notify you every 30 minutes. Only your tasks and schedule remain accessible.</div>
+    <button class="btn btn-full btn-red" onclick="activateEmergency()">ACTIVATE</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addExerciseModal">
+  <div class="modal">
+    <div class="modal-title">ADD EXERCISE <span class="modal-close" onclick="closeModal('addExerciseModal')">✕</span></div>
+    <input class="inp" id="exerciseName" placeholder="Exercise name..." style="margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <input class="inp" type="number" id="exerciseSets" placeholder="Sets">
+      <input class="inp" type="number" id="exerciseReps" placeholder="Reps">
+      <input class="inp" type="number" id="exerciseWeight" placeholder="lbs">
+    </div>
+    <button class="btn btn-full" onclick="saveExercise()">ADD</button>
+  </div>
+</div>
+
+<script>
+// ── STORAGE ──
+const S={
+  get(k){try{return JSON.parse(localStorage.getItem('alf2_'+k))}catch{return null}},
+  set(k,v){try{localStorage.setItem('alf2_'+k,JSON.stringify(v))}catch{}}
+};
+
+// ── STATE ──
+let state={
+  onboarded:S.get('onboarded')||false,
+  name:S.get('name')||'',
+  mode:S.get('mode')||'nagi',
+  weight:S.get('weight')||155,
+  goalWeight:S.get('goalWeight')||170,
+  gpa:S.get('gpa')||2.75,
+  credits:S.get('credits')||24,
+  rank:S.get('rank')||287,
+  egoScore:S.get('egoScore')||null,
+  streak:S.get('streak')||0,
+  gymStreak:S.get('gymStreak')||0,
+  lastOpen:S.get('lastOpen')||null,
+  lastWake:S.get('lastWake')||null,
+  sleeping:S.get('sleeping')||false,
+  checkin:{energy:3,focus:3,mood:3},
+  hw:S.get('hw')||[],
+  gym:S.get('gym')||[],
+  currentExercises:S.get('currentExercises')||[],
+  meals:S.get('meals')||{},
+  sleepLog:S.get('sleepLog')||[],
+  water:S.get('water')||{date:'',count:0},
+  supps:S.get('supps')||{},
+  finance:S.get('finance')||{balance:513.75,log:[]},
+  body:S.get('body')||{weights:[],measurements:[],photos:[]},
+  canvas:S.get('canvas')||{token:'',grades:{}},
+  career:S.get('career')||{certs:[],internships:[],linkedin:'',weeklyTask:''},
+  vault:S.get('vault')||{debriefs:[],wins:[],contract:'',scores:[],reading:[]},
+  customTasks:S.get('customTasks')||[],
+  overrides:S.get('overrides')||[],
+  schedule:S.get('schedule')||[],
+  lowEnergy:false,
+  emergency:false,
+  chatHistory:[],
+  intention:'',
+  currentOverrideBlock:null,
+  obStep:0,
+  obAnswers:{},
+};
+
+// ── SAVE ──
+function save(){
+  const keys=['onboarded','name','mode','weight','goalWeight','gpa','credits','rank',
+    'egoScore','streak','gymStreak','lastOpen','lastWake','sleeping','hw','gym',
+    'currentExercises','meals','sleepLog','water','supps','finance','body','canvas',
+    'career','vault','customTasks','overrides','schedule'];
+  keys.forEach(k=>S.set(k,state[k]));
+}
+
+// ── CONSTANTS ──
+const CLASSES=['DRAM1310','ENGL1302','ENTR3310','GOVT2305','MARK3337'];
+const CLASS_NAMES={DRAM1310:'DRAM 1310',ENGL1302:'ENGL 1302',ENTR3310:'ENTR 3310',GOVT2305:'GOVT 2305',MARK3337:'MARK 3337'};
+const SPLITS=[
+  {name:'CHEST & TRIS',icon:'💪',days:[1,4],exercises:['Bench Press','Incline Dumbbell Press','Cable Flys','Tricep Pushdowns','Overhead Tricep Extension','Dips']},
+  {name:'BACK & BIS',icon:'🏋️',days:[2,5],exercises:['Deadlift','Barbell Rows','Lat Pulldown','Cable Rows','Barbell Curls','Hammer Curls']},
+  {name:'LEGS & SHOULDERS',icon:'🦵',days:[3,6],exercises:['Squats','Leg Press','Romanian Deadlift','Leg Curls','Shoulder Press','Lateral Raises']},
+  {name:'ABS & CARDIO',icon:'🔥',days:[0],exercises:['Crunches','Leg Raises','Plank','Russian Twists','Treadmill','Jump Rope']},
+];
+const FACTOR_MEALS=[
+  {name:'Thai-Style Green Chicken Curry',icon:'🍛',count:2,used:0},
+  {name:'Roasted Garlic Chicken',icon:'🍗',count:1,used:0},
+  {name:'Browned Butter Grilled Chicken',icon:'🥩',count:2,used:0},
+  {name:'Fajita-Inspired Pork Tenderloin',icon:'🌮',count:1,used:0},
+  {name:'BBQ Bacon Burger',icon:'🍔',count:1,used:0},
+  {name:'Garlic-Parmesan Shredded Beef',icon:'🥣',count:1,used:0},
+];
+let factorMeals=S.get('factorMeals')||FACTOR_MEALS;
+const CERTS=[
+  {name:'Google Data Analytics Certificate',priority:1,time:'3-6 months',why:'MIS + consulting baseline. Free on Coursera.',done:false},
+  {name:'Microsoft Excel Expert',priority:2,time:'1-2 months',why:'Every consulting firm expects this.',done:false},
+  {name:'Google Project Management Certificate',priority:3,time:'3-6 months',why:'Consulting firms love this.',done:false},
+  {name:'Salesforce Admin Certification',priority:4,time:'2-3 months',why:'MIS and consulting crossover.',done:false},
+  {name:'Python for Everybody (Coursera)',priority:5,time:'2-4 months',why:'Differentiates you from other MIS candidates.',done:false},
+];
+let certProgress=S.get('certProgress')||CERTS;
+const BOOKS=[
+  {title:"Can't Hurt Me",author:'David Goggins',pages:364,read:0},
+  {title:'Atomic Habits',author:'James Clear',pages:320,read:0},
+  {title:'Almanack of Naval Ravikant',author:'Eric Jorgenson',pages:242,read:0},
+  {title:'$100M Offers',author:'Alex Hormozi',pages:271,read:0},
+];
+let books=S.get('books')||BOOKS;
+const DEBRIEF_QUESTIONS=[
+  "Did you do what you said you would today?",
+  "What did you leave unfinished and why?",
+  "Where did your time actually go today?",
+  "What would you do differently if you could redo today?",
+  "Are you making decisions based on who you are or who you want to be?",
+  "What's the one thing that would have made today a 10?",
+  "Did you move closer to Bauer today or just maintain?",
+];
+const NAGI_SCHED=[
+  {time:'10:30',task:"Up. Don't snooze twice.",cat:'wake'},
+  {time:'11:00',task:'Meal 1 — fuel up. High protein.',cat:'meal'},
+  {time:'11:30',task:'Study block — 90 min. Assignments first.',cat:'study'},
+  {time:'13:00',task:'Break. Walk. Reset.',cat:'free'},
+  {time:'13:30',task:'Study block 2 — finish what matters.',cat:'study'},
+  {time:'15:00',task:'Meal 2 — stay on plan.',cat:'meal'},
+  {time:'16:00',task:'Free time. Your call.',cat:'free'},
+  {time:'18:30',task:'GYM. Non-negotiable.',cat:'gym'},
+  {time:'20:30',task:'Protein shake. Right now.',cat:'meal'},
+  {time:'21:00',task:'Decompress. Recovery is training.',cat:'free'},
+  {time:'22:30',task:'Wind down. Phone down.',cat:'sleep'},
+  {time:'23:30',task:'Lights out.',cat:'sleep'},
+];
+const KUNI_SCHED=[
+  {time:'10:00',task:'Wake up. No snooze. Now.',cat:'wake'},
+  {time:'10:20',task:'Cold water. Ready.',cat:'wake'},
+  {time:'10:30',task:'Meal 1 — fast. Move on.',cat:'meal'},
+  {time:'11:00',task:'Study block — 90 min. No phone.',cat:'study'},
+  {time:'12:30',task:'Break — 15 min. Walk.',cat:'free'},
+  {time:'12:45',task:'Study block 2 — finish it.',cat:'study'},
+  {time:'14:00',task:'Meal 2 — clean.',cat:'meal'},
+  {time:'14:30',task:'Review. Plan tomorrow.',cat:'study'},
+  {time:'15:30',task:'Free time — earned.',cat:'free'},
+  {time:'18:00',task:'GYM. Not optional.',cat:'gym'},
+  {time:'20:00',task:'Protein shake. Immediately.',cat:'meal'},
+  {time:'20:30',task:'Reflect. Did you execute?',cat:'free'},
+  {time:'21:30',task:'Phone down.',cat:'sleep'},
+  {time:'22:00',task:'Prep tomorrow.',cat:'sleep'},
+  {time:'23:00',task:'Lights out. Champions sleep.',cat:'sleep'},
+];
+const CAT_COLORS={study:'#ffb74d',gym:'#FF5733',meal:'#4ade80',free:'#7EB8F7',sleep:'#6b7280',wake:'#FF5733'};
+const KAISER={weight:165,gpa:3.1,gym:5,rank:286};
+const MUSIC_PRESETS=[
+  {name:'LOCKED IN',desc:'40Hz binaural · deep study',emoji:'📚',bpm:'60-80 BPM',use:'Hard assignments'},
+  {name:'FLOW STATE',desc:'Alpha wave · creative work',emoji:'✍️',bpm:'80-100 BPM',use:'Writing · ENGL'},
+  {name:'BEAST MODE',desc:'High energy · 150BPM',emoji:'🏋️',bpm:'140-160 BPM',use:'Gym'},
+  {name:'MORNING IGNITION',desc:'Beta activation',emoji:'☀️',bpm:'100-120 BPM',use:'Morning routine'},
+  {name:'WIND DOWN',desc:'Theta state · 60BPM',emoji:'🌙',bpm:'<60 BPM',use:'Pre-sleep'},
+  {name:'EMERGENCY FOCUS',desc:'Pure binaural · no distractions',emoji:'⚡',bpm:'40Hz only',use:'Emergency mode'},
+];
+
+// ── ONBOARDING ──
+const OB_STEPS=[
+  {q:'WHAT IS YOUR NAME?',sub:'Alfred needs to know who he\'s building this for.',type:'text',key:'name',placeholder:'Your name...'},
+  {q:'CURRENT WEIGHT?',sub:'Be honest. This is your starting point, not your endpoint.',type:'number',key:'weight',placeholder:'In lbs (e.g. 155)'},
+  {q:'CURRENT GPA?',sub:'2.75. You need 3.25 for Bauer. Alfred knows the gap.',type:'number',key:'gpa',placeholder:'e.g. 2.75',step:'0.01'},
+  {q:'HOW MANY DAYS A WEEK ARE YOU ACTUALLY HITTING GYM?',sub:'Not what you plan. What you actually do.',type:'number',key:'gymDays',placeholder:'Days per week (e.g. 3)'},
+  {q:'RATE YOUR CONSISTENCY THIS PAST MONTH.',sub:'1 = coasting completely. 10 = locked in.',type:'number',key:'consistency',placeholder:'1-10'},
+];
+
+function initOnboarding(){
+  if(state.onboarded){
+    checkSilencePenalty();
+    return;
+  }
+  document.getElementById('onboard').style.display='flex';
+  renderObStep();
+}
+
+function renderObStep(){
+  const step=OB_STEPS[state.obStep];
+  const total=OB_STEPS.length;
+  const dots=Array.from({length:total},(_,i)=>`<div class="ob-dot ${i<state.obStep?'done':i===state.obStep?'active':''}"></div>`).join('');
+  document.getElementById('obContent').innerHTML=`
+    <div class="ob-progress">${dots}</div>
+    <div class="ob-q">${step.q}</div>
+    <div class="ob-sub-q">${step.sub}</div>
+    <input class="ob-inp" id="obInp" type="${step.type}" placeholder="${step.placeholder}" ${step.step?`step="${step.step}"`:''}
+      onkeydown="if(event.key==='Enter')obNext()">
+    <button class="ob-btn" onclick="obNext()">CONTINUE</button>
+    ${state.obStep>0?'<button class="ob-btn sec" onclick="obBack()">BACK</button>':''}
+  `;
+  setTimeout(()=>{const el=document.getElementById('obInp');if(el)el.focus();},100);
+  if(state.obAnswers[step.key]){
+    setTimeout(()=>{const el=document.getElementById('obInp');if(el)el.value=state.obAnswers[step.key];},50);
+  }
+}
+
+function obNext(){
+  const step=OB_STEPS[state.obStep];
+  const val=document.getElementById('obInp').value.trim();
+  if(!val){document.getElementById('obInp').style.borderColor='var(--red)';return;}
+  state.obAnswers[step.key]=val;
+  if(state.obStep<OB_STEPS.length-1){
+    state.obStep++;
+    renderObStep();
+  } else {
+    completeOnboarding();
+  }
+}
+
+function obBack(){
+  if(state.obStep>0){state.obStep--;renderObStep();}
+}
+
+async function completeOnboarding(){
+  const a=state.obAnswers;
+  state.name=a.name||'Thuki';
+  state.weight=parseFloat(a.weight)||155;
+  state.gpa=parseFloat(a.gpa)||2.75;
+  const consistency=parseInt(a.consistency)||4;
+  const gymDays=parseInt(a.gymDays)||3;
+  // Calculate starting rank
+  let rank=300;
+  rank-=Math.floor(consistency*1.3);
+  rank-=Math.floor(gymDays*2);
+  rank=Math.max(280,Math.min(299,rank));
+  state.rank=rank;
+  state.onboarded=true;
+  save();
+  // Show first impression
+  document.getElementById('obContent').innerHTML=`
+    <div style="font-family:var(--mono);font-size:9px;color:var(--nagi);margin-bottom:20px;letter-spacing:2px;">ALFRED'S FIRST IMPRESSION</div>
+    <div style="font-size:14px;color:var(--muted2);line-height:1.9;margin-bottom:24px;" id="firstImpression">Analyzing...</div>
+    <div style="font-family:var(--dis);font-size:36px;color:var(--red);text-align:center;margin-bottom:4px;">RANK ${rank}</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:32px;">OF 300</div>
+    <button class="ob-btn" onclick="startFacility()" id="enterBtn" style="display:none;">ENTER THE FACILITY</button>
+  `;
+  const impression=await generateFirstImpression(a,rank);
+  document.getElementById('firstImpression').textContent=impression;
+  document.getElementById('enterBtn').style.display='block';
+}
+
+async function generateFirstImpression(a,rank){
+  try{
+    const res=await fetch('/api/alfred',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:300,
+        system:`You are Alfred — Ego from Blue Lock. Cold, calculating, honest. Give a first impression of this person entering your facility. 3-4 sentences max. No warmth. Just assessment. Speak directly to them. No names.`,
+        messages:[{role:'user',content:`Name: ${a.name}. Weight: ${a.weight}lbs, goal 170. GPA: ${a.gpa}, needs 3.25 for Bauer College of Business MIS transfer. Gym: ${a.gymDays} days/week. Consistency last month: ${a.consistency}/10. Starting rank: ${rank}/300. Their stated weakness: lazy, no motivation. They want to be like Kunigami post-wildcard. Give the assessment.`}]
+      })
+    });
+    const d=await res.json();
+    return d.content?.[0]?.text||getFallbackImpression(rank);
+  }catch{return getFallbackImpression(rank);}
+}
+
+function getFallbackImpression(rank){
+  return `${rank} out of 300. Not the bottom, but close enough that the view from down here should bother you. The numbers tell a story of someone who knows what they should be doing and chooses not to. That changes now — or it doesn't, and you stay exactly where you are. The facility doesn't care which you pick. But I'll be watching.`;
+}
+
+function startFacility(){
+  document.getElementById('onboard').style.display='none';
+  checkSilencePenalty();
+}
+
+// ── SILENCE PENALTY ──
+function checkSilencePenalty(){
+  if(state.lastOpen){
+    const hoursGone=(Date.now()-state.lastOpen)/(1000*60*60);
+    if(hoursGone>=24&&!state.sleeping){
+      showSilencePenalty(hoursGone);
+      return;
+    }
+  }
+  state.lastOpen=Date.now();save();
+  showWakeScreen();
+}
+
+function showSilencePenalty(hours){
+  const h=Math.floor(hours);
+  const el=document.getElementById('silencePenalty');
+  document.getElementById('spTime').textContent=`${h} HOURS ABSENT`;
+  const missedTasks=state.hw.filter(hw=>!hw.done&&new Date(hw.due)<new Date()).length;
+  document.getElementById('spMsg').textContent=`${h} hours. No check-in. No log. Nothing. ${missedTasks>0?`${missedTasks} assignment${missedTasks>1?'s':''} slipped while you were gone.`:''} The facility doesn't pause because you disappeared. Get back in.`;
+  el.style.display='flex';
+}
+
+function dismissSilencePenalty(){
+  document.getElementById('silencePenalty').style.display='none';
+  state.lastOpen=Date.now();save();
+  showWakeScreen();
+}
+
+// ── WAKE SCREEN ──
+function showWakeScreen(){
+  const ws=document.getElementById('wakeScreen');
+  if(state.sleeping){
+    ws.classList.add('night-mode');
+  } else {
+    ws.classList.remove('night-mode');
+  }
+  ws.style.display='flex';
+  startWakeClock();
+  setWakeQuote();
+}
+
+let wakeClockInterval=null;
+function startWakeClock(){
+  const tick=()=>{
+    const now=new Date();
+    const h=now.getHours()%12||12;
+    const m=String(now.getMinutes()).padStart(2,'0');
+    const ampm=now.getHours()>=12?'PM':'AM';
+    const el=document.getElementById('wsTime');
+    if(el)el.textContent=`${h}:${m} ${ampm}`;
+    const de=document.getElementById('wsDate');
+    if(de)de.textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  };
+  tick();
+  if(wakeClockInterval)clearInterval(wakeClockInterval);
+  wakeClockInterval=setInterval(tick,1000);
+}
+
+function setWakeQuote(){
+  const k=state.mode==='kunigami';
+  const quotes=k?[
+    "The schedule is already set. Get up and execute it.",
+    "Kaiser logged his first session 2 hours ago. You're still in bed.",
+    "Bauer doesn't accept people who sleep through their potential.",
+    "Every hour you delay is an hour Kaiser uses.",
+  ]:[
+    "Another day in the facility. Make it count.",
+    "The gap doesn't close itself. That's on you.",
+    "Nagi energy is good when it's moving forward. Is it moving?",
+    "Natural talent without activation is just potential. Activate.",
+  ];
+  const el=document.getElementById('wsAlfredQuote');
+  if(el)el.textContent=quotes[Math.floor(Math.random()*quotes.length)];
+}
+
+function selectEmoji(el){
+  const group=el.dataset.group;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.checkin[group]=parseInt(el.dataset.val);
+}
+
+function wakeUp(){
+  if(wakeClockInterval)clearInterval(wakeClockInterval);
+  state.lastWake=Date.now();
+  state.sleeping=false;
+  // Check today's water reset
+  const today=new Date().toISOString().split('T')[0];
+  if(state.water.date!==today){state.water={date:today,count:0};save();}
+  save();
+  document.getElementById('wakeScreen').style.display='none';
+  showBriefing();
+}
+
+function goToSleep(){
+  if(wakeClockInterval)clearInterval(wakeClockInterval);
+  document.getElementById('wakeScreen').style.display='none';
+  showDebrief();
+}
+
+// ── BRIEFING ──
+async function showBriefing(){
+  const bs=document.getElementById('briefingScreen');
+  bs.style.display='flex';
+  const now=new Date();
+  document.getElementById('briefDate').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();
+  // Generate spiritual card first (fast)
+  const spirit=generateSpirit();
+  document.getElementById('briefAffirmation').textContent=spirit.compact+'\n\n'+spirit.alfred;
+  // Generate brief from Alfred
+  document.getElementById('briefContent').textContent='Alfred is reading the data...';
+  const brief=await generateBriefing();
+  document.getElementById('briefContent').textContent=brief;
+}
+
+async function generateBriefing(){
+  const now=new Date();
+  const h=now.getHours()%12||12;
+  const m=String(now.getMinutes()).padStart(2,'0');
+  const ampm=now.getHours()>=12?'PM':'AM';
+  const pending=state.hw.filter(x=>!x.done);
+  const urgent=pending.filter(x=>{const d=Math.ceil((new Date(x.due)-now)/(86400000));return d<=3;});
+  const day=now.getDay();
+  const split=SPLITS.find(s=>s.days.includes(day))||SPLITS[0];
+  const checkin=state.checkin;
+  const energyWord=checkin.energy<=2?'low energy':checkin.energy>=4?'high energy':'moderate energy';
+  const isFactorWeek=now>=new Date('2025-04-05')&&now<=new Date('2025-04-12');
+  try{
+    const res=await fetch('/api/alfred',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:`You are Alfred — Ego from Blue Lock. Generate a morning mission brief. Cold, direct, Ego energy. 4-6 sentences. Include: time check, what's due, gym plan, one sharp observation. No warmth unless truly earned. Mode: ${state.mode.toUpperCase()}.`,
+        messages:[{role:'user',content:`Time: ${h}:${m} ${ampm}. Energy check-in: ${energyWord} (${checkin.energy}/5). Focus: ${checkin.focus}/5. Mood: ${checkin.mood}/5. Rank: ${state.rank}/300. Streak: ${state.streak} days. Pending assignments: ${pending.map(x=>`${x.name} (${x.cls}, due ${x.due})`).join(', ')||'none'}. Urgent (within 3 days): ${urgent.map(x=>x.name).join(', ')||'none'}. Gym today: ${split.name}. ${isFactorWeek?'Factor meals in the fridge — no meal prep excuse today.':''} Kaiser stats: ${KAISER.weight}lbs, ${KAISER.gpa} GPA, ${KAISER.gym} gym days/week. Generate the morning brief.`}]
+      })
+    });
+    const d=await res.json();
+    return d.content?.[0]?.text||getFallbackBriefing(split);
+  }catch{return getFallbackBriefing(split);}
+}
+
+function getFallbackBriefing(split){
+  const now=new Date();
+  const h=now.getHours()%12||12;
+  const m=String(now.getMinutes()).padStart(2,'0');
+  const ampm=now.getHours()>=12?'PM':'AM';
+  const pending=state.hw.filter(x=>!x.done).length;
+  return `${h}:${m} ${ampm}. You're up. ${pending} assignments pending — check the board. Gym is ${split.name} tonight. Kaiser hit his session yesterday. You need to hit yours. The gap between Rank ${state.rank} and Rank ${KAISER.rank} closes one executed day at a time. This is one of those days.`;
+}
+
+function enterApp(){
+  const intention=document.getElementById('intentionInp').value.trim();
+  state.intention=intention;
+  save();
+  document.getElementById('briefingScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  scheduleNotifications();
+  init();
+}
+
+// ── DEBRIEF ──
+function showDebrief(){
+  const ds=document.getElementById('debriefScreen');
+  ds.style.display='flex';
+  const now=new Date();
+  document.getElementById('debriefDate').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}).toUpperCase();
+  const q=DEBRIEF_QUESTIONS[now.getDay()%DEBRIEF_QUESTIONS.length];
+  document.getElementById('debriefQuestion').textContent=q;
+}
+
+async function submitDebrief(){
+  const answer=document.getElementById('debriefAnswer').value.trim();
+  const win=document.getElementById('winsInp').value.trim();
+  if(!answer){document.getElementById('debriefAnswer').style.borderColor='var(--red)';return;}
+  // Calculate ego score
+  const today=new Date().toISOString().split('T')[0];
+  const todayMeals=state.meals[today]||{};
+  const mealScore=Object.keys(todayMeals).length/3;
+  const tasksDone=state.hw.filter(x=>x.done).length;
+  const totalTasks=state.hw.length;
+  const taskScore=totalTasks>0?tasksDone/totalTasks:0.5;
+  const todayGym=state.gym.some(g=>g.date===today);
+  const gymScore=todayGym?1:0;
+  const todayWater=state.water.date===today?state.water.count/3:0;
+  const suppsDone=Object.values(state.supps[today]||{}).filter(Boolean).length;
+  const suppScore=suppsDone/8;
+  const egoScore=Math.round((mealScore*20)+(taskScore*30)+(gymScore*25)+(todayWater*15)+(suppScore*10));
+  state.egoScore=egoScore;
+  state.vault.debriefs.push({date:today,question:DEBRIEF_QUESTIONS[new Date().getDay()%DEBRIEF_QUESTIONS.length],answer,win,score:egoScore,ts:Date.now()});
+  state.vault.scores.push({date:today,score:egoScore});
+  if(win) state.vault.wins.push({date:today,win});
+  // Update streak
+  state.streak++;
+  save();
+  // Show score
+  document.getElementById('scoreNum').textContent=egoScore;
+  document.getElementById('debriefScore').style.display='block';
+  document.getElementById('debriefBtn').style.display='none';
+  document.getElementById('sleepBtn').style.display='block';
+  // Get Alfred response
+  const response=await getDebriefResponse(egoScore,answer);
+  document.getElementById('debriefAlfredResponse').textContent=response;
+}
+
+async function getDebriefResponse(score,answer){
+  const k=state.mode==='kunigami';
+  if(score>=85) return k?"85+. That's what execution looks like. Do it again tomorrow.":"Above 85. Progress is real. Don't get comfortable.";
+  if(score>=70) return k?"70. Acceptable. Not impressive.":"70 range. You showed up. Build on it.";
+  if(score>=50) return k?"Below 70. You left points on the table. What exactly stopped you?":"Below 70. Some things worked. Identify what didn't and fix it.";
+  return k?"Below 50. Three days of this and Blackout Mode activates. Get it together.":"Below 50. Tomorrow is a reset. Use it.";
+}
+
+function lockForSleep(){
+  state.sleeping=true;
+  state.lastOpen=Date.now();
+  save();
+  document.getElementById('debriefScreen').style.display='none';
+  showWakeScreen();
+}
+
+// ── INIT ──
+function init(){
+  applyMode();
+  renderHome();
+  renderSchedule();
+  renderHW();
+  renderGym();
+  renderMeals();
+  renderSleep();
+  renderFinance();
+  renderSupplements();
+  renderBody();
+  renderCareer();
+  renderVault();
+  renderCustomTasks();
+  startHomeClock();
+  updateAlfredBars();
+  checkBlackoutMode();
+}
+
+// ── MODE ──
+function applyMode(){
+  const k=state.mode==='kunigami';
+  document.getElementById('app').className=k?'km':'';
+  const pills=document.querySelectorAll('.mode-pill');
+  pills.forEach(p=>p.textContent=k?'⚡ KUNIGAMI MODE':'◈ NAGI MODE');
+}
+
+function toggleMode(){
+  state.mode=state.mode==='nagi'?'kunigami':'nagi';
+  save();applyMode();renderSchedule();updateAlfredBars();
+}
+
+// ── NAV ──
+function goTo(page){
+  // Check blackout mode
+  if(state.emergency&&page!=='track'&&page!=='daily'){return;}
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+}
+
+// ── TABS ──
+const tabGroups={
+  daily:['schedule','alfred'],
+  track:['hw','gym','meals','sleep','canvas','finance','checkin'],
+  grow:['body','career','vault'],
+};
+function switchTab(group,tab){
+  tabGroups[group].forEach(t=>{
+    const content=document.getElementById(`${group}-content-${t}`);
+    const tabEl=document.getElementById(`${group}-tab-${t}`);
+    if(content){content.style.display=t===tab?(group==='daily'&&tab==='alfred'?'flex':'block'):'none';}
+    if(tabEl){tabEl.classList.toggle('active',t===tab);}
+  });
+}
+
+// ── CLOCK ──
+function startHomeClock(){
+  const tick=()=>{
+    const now=new Date();
+    renderSchedule();
+  };
+  setInterval(tick,60000);
+}
+
+// ── HOME ──
+function renderHome(){
+  // Streak bar
+  const bar=document.getElementById('streakBar');
+  if(bar){bar.innerHTML='';for(let i=0;i<7;i++){bar.innerHTML+=`<div class="streak-day ${i<(state.streak%7)?'hit':''}"></div>`;}}
+  // Stats
+  setText('streakHome',state.streak);
+  setText('gymStreakHome',state.gymStreak);
+  const egoEl=document.getElementById('egoScoreHome');
+  if(egoEl)egoEl.textContent=state.egoScore!==null?state.egoScore:'--';
+  const total=state.hw.length+state.customTasks.length;
+  const done=state.hw.filter(x=>x.done).length+state.customTasks.filter(x=>x.done).length;
+  setText('tasksHome',`${done}/${total}`);
+  setText('homeRank',`RANK ${state.rank}`);
+  // Water
+  renderWater();
+  // Spiritual
+  renderSpiritual();
+  // Daily anchor
+  renderDailyAnchor();
+  // Class risk
+  renderClassRisk();
+  // Factor meals today
+  renderFactorToday();
+  // Kaiser
+  renderKaiser();
+  // Tasks
+  renderHomeTasks();
+  // Weight gap
+  const wg=document.getElementById('weightGapDetail');
+  if(wg)wg.textContent=`${state.weight} → ${state.goalWeight}`;
+  const wgStatus=document.getElementById('weightGap');
+  if(wgStatus){
+    const lbsPerWeek=0.5;
+    const weeksNeeded=(state.goalWeight-state.weight)/lbsPerWeek;
+    wgStatus.textContent=weeksNeeded>12?'BEHIND':weeksNeeded>6?'ON TRACK':'AHEAD';
+    wgStatus.className='gap-status '+(weeksNeeded>12?'behind':weeksNeeded>6?'on':'ahead');
+  }
+}
+
+function renderWater(){
+  const el=document.getElementById('waterBottles');
+  if(!el)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(state.water.date!==today){state.water={date:today,count:0};}
+  el.innerHTML='';
+  for(let i=0;i<3;i++){
+    el.innerHTML+=`<div class="bottle ${i<state.water.count?'filled':''}" onclick="addWater(${i})">🫗</div>`;
+  }
+  const st=document.getElementById('waterStatus');
+  if(st)st.textContent=`${state.water.count} / 3 bottles (${state.water.count*32}oz / 96oz)`;
+}
+
+function addWater(idx){
+  const today=new Date().toISOString().split('T')[0];
+  if(state.water.date!==today)state.water={date:today,count:0};
+  state.water.count=Math.min(3,idx+1);
+  save();renderWater();
+}
+
+function renderSpiritual(){
+  const spirit=generateSpirit();
+  const compact=document.getElementById('spiritCompact');
+  const alfred=document.getElementById('spiritAlfred');
+  if(compact)compact.innerHTML=spirit.compact;
+  if(alfred)alfred.textContent=spirit.alfred;
+  const expand=document.getElementById('spiritExpand');
+  if(expand)expand.innerHTML=spirit.full;
+}
+
+function generateSpirit(){
+  const now=new Date();
+  const day=now.getDay();
+  const hour=now.getHours();
+  const lifePathDay=((now.getDate()+1+7)%9)||9;
+  const dayWords=['reflection','action','creativity','discipline','freedom','service','strategy','power','completion'];
+  const dayWord=dayWords[lifePathDay-1]||'flow';
+  const moonEnergy=day%3===0?'peak':'day%3===1'?'building':'releasing';
+  const leoLines=["Your fire needs a direction today — give it one.","Leo energy demands you show up fully, not halfway.","The stage is yours. Don't waste it on small moves."];
+  const sagLines=["Your restlessness today is fuel. Use it or lose it.","Freedom is earned through discipline. Sagittarius knows this.","Channel the archer energy — aim, then release."];
+  const piscesLines=["You're absorbing the energy around you. Curate your environment.","Your intuition is sharp today. Trust it on decisions.","Pisces rising sees what others miss. Use that."];
+  const tarotCards=[{name:'The Emperor',msg:'Structure wins today. Build systems, not excuses.'},{name:'The Tower',msg:'Something needs to break down to be rebuilt better.'},{name:'Strength',msg:'Inner discipline over raw force. Controlled power.'},{name:'The Chariot',msg:'Forward momentum. Commit and don\'t look back.'},{name:'The World',msg:'Completion energy. Finish what you started.'},{name:'The Hermit',msg:'Go inward. The answer is already in you.'},{name:'Wheel of Fortune',msg:'Momentum compounds. Keep the wheel turning.'},{name:'The Star',msg:'After the grind comes clarity. Trust the process.'},{name:'Judgement',msg:'Time to evaluate honestly. No self-deception today.'}];
+  const tarot=tarotCards[day%tarotCards.length];
+  const compact=`<div class="spirit-line"><span class="spirit-icon">🔢</span>${lifePathDay} day — ${dayWord} & focus.</div>
+<div class="spirit-line"><span class="spirit-icon">☀️</span>${leoLines[day%leoLines.length]}</div>
+<div class="spirit-line"><span class="spirit-icon">🃏</span>${tarot.name} — ${tarot.msg}</div>`;
+  const alfred=`Alfred: "${sagLines[day%sagLines.length].split(' ').slice(0,6).join(' ')}... ${dayWord.toUpperCase()}."`; 
+  const full=`<div class="spirit-full-line">☀️ Leo Sun — ${leoLines[day%leoLines.length]}</div>
+<div class="spirit-full-line">🌙 Sag Moon — ${sagLines[day%sagLines.length]}</div>
+<div class="spirit-full-line">🌊 Pisces Rising — ${piscesLines[day%piscesLines.length]}</div>
+<div class="spirit-full-line">🃏 ${tarot.name} — ${tarot.msg}</div>
+<div class="spirit-full-line">🔢 Life Path 1 · ${lifePathDay} personal day — ${dayWord}. LP1s lead. Today's energy supports it.</div>`;
+  return{compact,alfred,full};
+}
+
+function toggleSpirit(el){
+  const expand=document.getElementById('spiritExpand');
+  if(expand)expand.classList.toggle('open');
+}
+
+function renderDailyAnchor(){
+  const el=document.getElementById('dailyAnchor');
+  if(!el)return;
+  const pending=state.hw.filter(x=>!x.done);
+  const urgent=pending.filter(x=>{const d=Math.ceil((new Date(x.due)-new Date())/(86400000));return d<=2;});
+  if(urgent.length>0){el.textContent=`Submit ${urgent[0].name} (${urgent[0].cls}) — due ${urgent[0].due}.`;return;}
+  const today=new Date().toISOString().split('T')[0];
+  const todayMeals=state.meals[today]||{};
+  if(!todayMeals[1]){el.textContent='Log Meal 1. Bulk doesn\'t happen on empty.';return;}
+  const todayGym=state.gym.some(g=>g.date===today);
+  if(!todayGym){el.textContent='Hit the gym today. Non-negotiable.';return;}
+  el.textContent='All clear. Push harder on something. Don\'t coast.';
+}
+
+function renderClassRisk(){
+  const el=document.getElementById('classRisk');
+  if(!el)return;
+  const risks=CLASSES.map(cls=>{
+    const classHW=state.hw.filter(x=>x.cls===cls&&!x.done);
+    const urgent=classHW.filter(x=>{const d=Math.ceil((new Date(x.due)-new Date())/(86400000));return d<=2;});
+    const soon=classHW.filter(x=>{const d=Math.ceil((new Date(x.due)-new Date())/(86400000));return d<=5&&d>2;});
+    let risk='green',status='Clear';
+    if(urgent.length>0){risk='red';status=`Due in ${Math.ceil((new Date(urgent[0].due)-new Date())/(86400000))}d`;}
+    else if(soon.length>0){risk='amber';status=`Due soon`;}
+    return{cls,name:CLASS_NAMES[cls],risk,status};
+  });
+  el.innerHTML=risks.map(r=>`
+    <div class="risk-row">
+      <div class="risk-dot risk-${r.risk}"></div>
+      <div class="risk-name">${r.name}</div>
+      <div class="risk-status">${r.status}</div>
+    </div>`).join('');
+}
+
+function renderFactorToday(){
+  const el=document.getElementById('factorToday');
+  const card=document.getElementById('factorHomeCard');
+  if(!el)return;
+  const now=new Date();
+  const factorStart=new Date('2025-04-05');
+  const factorEnd=new Date('2025-04-12');
+  if(now<factorStart||now>factorEnd){if(card)card.style.display='none';return;}
+  if(card)card.style.display='block';
+  const available=factorMeals.filter(m=>m.used<m.count);
+  if(!available.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">All Factor meals used.</div>';return;}
+  const suggested=available.slice(0,2);
+  el.innerHTML=suggested.map(m=>`
+    <div class="factor-meal" onclick="useFactor('${m.name}')">
+      <div class="factor-emoji">${m.icon}</div>
+      <div>
+        <div class="factor-name">${m.name}</div>
+        <div class="factor-count">${m.used}/${m.count} used</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--acc);">LOG ›</div>
+    </div>`).join('');
+}
+
+function useFactor(name){
+  const meal=factorMeals.find(m=>m.name===name);
+  if(meal&&meal.used<meal.count){meal.used++;S.set('factorMeals',factorMeals);}
+  const today=new Date().toISOString().split('T')[0];
+  if(!state.meals[today])state.meals[today]={};
+  const slotKey=!state.meals[today][1]?1:!state.meals[today][2]?2:3;
+  state.meals[today][slotKey]={food:name,logged:true,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
+  save();renderFactorToday();renderMeals();renderHome();
+  microWin(`Factor meal logged. Meal ${slotKey} done.`);
+}
+
+function renderKaiser(){
+  const k=document.getElementById('kaiserAlfred');
+  if(!k)return;
+  const messages=[
+    `He's at ${KAISER.weight}lbs, ${KAISER.gpa} GPA. You're at ${state.weight}lbs, ${state.gpa} GPA. The gap is real.`,
+    `Kaiser hit the gym ${KAISER.gym} days last week. You hit ${state.gymStreak>0?'at least one':'zero'}. Do the math.`,
+    `He's 6 spots above you. Close it.`,
+    `Kaiser doesn't know you exist. Make him feel it.`,
+  ];
+  k.textContent=messages[new Date().getDay()%messages.length];
+}
+
+function renderHomeTasks(){
+  const el=document.getElementById('homeTasks');
+  if(!el)return;
+  const allTasks=[
+    ...state.hw.map(h=>({...h,type:'hw'})),
+    ...state.customTasks.map(t=>({...t,type:'custom'}))
+  ].filter(t=>!t.done).slice(0,5);
+  if(!allTasks.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:8px 0;">All tasks complete. Add more in Track.</div>';return;}
+  el.innerHTML=allTasks.map(t=>{
+    const fn=t.type==='hw'?`toggleHW('${t.id}')`:`toggleCustomTask('${t.id}')`;
+    const chain=t.type==='hw'?`${t.cls} → GPA → Bauer → MIS → consulting`:'';
+    const days=t.due?Math.ceil((new Date(t.due)-new Date())/(86400000)):null;
+    const tag=days!==null?(days<=1?'tag-red':days<=3?'tag-amber':'tag-green'):'';
+    const tagText=days!==null?(days<0?'OVERDUE':days===0?'TODAY':days===1?'TOMORROW':`${days}D`):'';
+    return `<div class="task-row">
+      <div class="task-check" onclick="${fn}"></div>
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        ${t.due?`<div class="task-sub">Due ${formatDate(t.due)}</div>`:''}
+        ${chain?`<div class="task-chain">${chain}</div>`:''}
+      </div>
+      ${tagText?`<div class="task-tag ${tag}">${tagText}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── SCHEDULE ──
+function renderSchedule(){
+  const el=document.getElementById('schedList');
+  if(!el)return;
+  const base=state.mode==='kunigami'?KUNI_SCHED:NAGI_SCHED;
+  const custom=state.schedule;
+  const all=[...base.map(s=>({...s,custom:false})),...custom.map(s=>({...s,custom:true}))];
+  all.sort((a,b)=>a.time.localeCompare(b.time));
+  const now=new Date();
+  const nowMins=now.getHours()*60+now.getMinutes();
+  let currentIdx=-1;
+  for(let i=0;i<all.length-1;i++){
+    const[h,m]=all[i].time.split(':').map(Number);
+    const[h2,m2]=all[i+1].time.split(':').map(Number);
+    if(nowMins>=h*60+m&&nowMins<h2*60+m2){currentIdx=i;break;}
+  }
+  el.innerHTML=all.map((s,i)=>{
+    const isCurrent=i===currentIdx;
+    const color=CAT_COLORS[s.cat]||'#888';
+    const music=MUSIC_PRESETS.find(p=>{
+      if(s.cat==='study')return p.name==='LOCKED IN';
+      if(s.cat==='gym')return p.name==='BEAST MODE';
+      if(s.cat==='sleep')return p.name==='WIND DOWN';
+      return null;
+    });
+    return `<div class="sched-row">
+      <div class="sched-time">${fmt12(s.time)}</div>
+      <div class="sched-bar" style="background:${color};opacity:${isCurrent?1:0.35}"></div>
+      <div class="sched-content ${isCurrent?'sched-now':''}">
+        <div class="sched-task">${s.task}${isCurrent?`<span class="now-badge">NOW</span>`:''}</div>
+        <div class="sched-cat">${s.cat.toUpperCase()}${music?` · <span style="color:var(--acc);cursor:pointer" onclick="openSpotify('${music.name}')">${music.emoji} ${music.name}</span>`:''}</div>
+        <div class="override-btn" onclick="openOverride('${s.time}','${s.task}')">↪ Did something else</div>
+        ${s.custom?`<div class="override-btn" onclick="removeCustomSched('${s.id}')">✕ Remove</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openOverride(time,task){
+  state.currentOverrideBlock={time,task};
+  document.getElementById('overrideFrom').value=time;
+  showModal('overrideModal');
+}
+
+function logOverride(){
+  const what=document.getElementById('overrideWhat').value.trim();
+  const from=document.getElementById('overrideFrom').value;
+  const to=document.getElementById('overrideTo').value;
+  if(!what)return;
+  state.overrides.push({block:state.currentOverrideBlock?.task||'',what,from,to,date:new Date().toISOString().split('T')[0],ts:Date.now()});
+  save();closeModal('overrideModal');
+  document.getElementById('overrideWhat').value='';
+}
+
+function removeCustomSched(id){
+  state.schedule=state.schedule.filter(s=>s.id!==id);
+  save();renderSchedule();
+}
+
+function openSpotify(preset){
+  const queries={
+    'LOCKED IN':'40hz binaural beats study music',
+    'FLOW STATE':'alpha wave music creative focus',
+    'BEAST MODE':'gym workout hype music 2024',
+    'MORNING IGNITION':'morning motivation music energy',
+    'WIND DOWN':'sleep music theta waves calm',
+    'EMERGENCY FOCUS':'binaural beats deep concentration'
+  };
+  const q=queries[preset]||preset;
+  window.open(`https://open.spotify.com/search/${encodeURIComponent(q)}`,'_blank');
+}
+
+// ── HW ──
+function renderHW(){
+  const el=document.getElementById('hwList');
+  if(!el)return;
+  if(!state.hw.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:8px 0;">No assignments yet.</div>';return;}
+  state.hw.sort((a,b)=>new Date(a.due)-new Date(b.due));
+  el.innerHTML=state.hw.map(h=>{
+    const days=Math.ceil((new Date(h.due)-new Date())/(86400000));
+    const cls=days<=1?'tag-red':days<=3?'tag-amber':'tag-green';
+    const lbl=days<0?'OVERDUE':days===0?'TODAY':days===1?'TOMORROW':`${days}D`;
+    return `<div class="task-row">
+      <div class="task-check ${h.done?'done':''}" onclick="toggleHW('${h.id}')"></div>
+      <div class="task-info">
+        <div class="task-name ${h.done?'done':''}">${h.name}</div>
+        <div class="task-sub">${CLASS_NAMES[h.cls]||h.cls} · Due ${formatDate(h.due)}</div>
+        <div class="task-chain">${h.cls} → GPA → Bauer → MIS → consulting</div>
+        ${h.grade?`<div style="font-family:var(--mono);font-size:9px;color:var(--green);">Grade: ${h.grade}</div>`:''}
+      </div>
+      <div class="task-tag ${cls}">${lbl}</div>
+      <div onclick="removeHW('${h.id}')" style="cursor:pointer;opacity:0.3;padding:4px;margin-left:4px;font-size:12px;">✕</div>
+    </div>`;
+  }).join('');
+}
+
+function addHW(){
+  const name=document.getElementById('hwName').value.trim();
+  const due=document.getElementById('hwDue').value;
+  const cls=document.getElementById('hwClass').value;
+  const type=document.getElementById('hwType').value;
+  const grade=document.getElementById('hwGrade').value;
+  if(!name||!due)return;
+  state.hw.push({id:uid(),name,due,cls,type,grade:grade||null,done:false,ts:Date.now()});
+  save();renderHW();renderHome();
+  document.getElementById('hwName').value='';
+  document.getElementById('hwDue').value='';
+  document.getElementById('hwGrade').value='';
+  scheduleHWNotifications({id:uid(),name,due,cls,type});
+}
+
+function toggleHW(id){
+  const h=state.hw.find(x=>x.id===id);
+  if(h){h.done=!h.done;save();renderHW();renderHome();if(h.done)microWin(`${h.name} done. ${h.cls} → GPA → Bauer.`);}
+}
+function removeHW(id){state.hw=state.hw.filter(x=>x.id!==id);save();renderHW();renderHome();}
+
+// ── GYM ──
+function renderGym(){
+  const el=document.getElementById('gymSplit');
+  if(!el)return;
+  const day=new Date().getDay();
+  el.innerHTML=SPLITS.map(s=>`
+    <div class="split-card ${s.days.includes(day)?'today':''}">
+      <div class="split-icon">${s.icon}</div>
+      <div style="font-size:11px;font-weight:600;margin-bottom:2px;">${s.name}</div>
+      <div class="split-name">${s.days.includes(day)?'TODAY':'—'}</div>
+    </div>`).join('');
+  renderExerciseList();
+  renderGymHistory();
+}
+
+function renderExerciseList(){
+  const el=document.getElementById('exerciseList');
+  if(!el)return;
+  if(!state.currentExercises.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:8px 0;">Add exercises for today\'s session.</div>';return;}
+  el.innerHTML=state.currentExercises.map((e,i)=>`
+    <div class="exercise-row">
+      <div class="exercise-name">${e.name}</div>
+      <input class="exercise-inp" type="number" value="${e.sets}" placeholder="S" onchange="updateExercise(${i},'sets',this.value)">
+      <div class="exercise-lbl">×</div>
+      <input class="exercise-inp" type="number" value="${e.reps}" placeholder="R" onchange="updateExercise(${i},'reps',this.value)">
+      <div class="exercise-lbl">@</div>
+      <input class="exercise-inp" type="number" value="${e.weight}" placeholder="lbs" onchange="updateExercise(${i},'weight',this.value)">
+      <div class="exercise-lbl">lbs</div>
+      ${e.pr?'<div class="pr-badge">PR</div>':''}
+    </div>`).join('');
+}
+
+function addExercise(){showModal('addExerciseModal');}
+function saveExercise(){
+  const name=document.getElementById('exerciseName').value.trim();
+  const sets=document.getElementById('exerciseSets').value||3;
+  const reps=document.getElementById('exerciseReps').value||10;
+  const weight=document.getElementById('exerciseWeight').value||0;
+  if(!name)return;
+  // Check PR
+  const prev=state.gym.flatMap(g=>g.exercises||[]).filter(e=>e.name===name).sort((a,b)=>b.weight-a.weight)[0];
+  const isPR=prev&&parseFloat(weight)>prev.weight;
+  state.currentExercises.push({name,sets:parseInt(sets),reps:parseInt(reps),weight:parseFloat(weight),pr:isPR});
+  save();renderExerciseList();closeModal('addExerciseModal');
+  document.getElementById('exerciseName').value='';
+  document.getElementById('exerciseSets').value='';
+  document.getElementById('exerciseReps').value='';
+  document.getElementById('exerciseWeight').value='';
+}
+function updateExercise(i,field,val){
+  if(state.currentExercises[i])state.currentExercises[i][field]=parseFloat(val)||val;
+  save();
+}
+function logGymSession(){
+  const today=new Date().toISOString().split('T')[0];
+  const day=new Date().getDay();
+  const split=SPLITS.find(s=>s.days.includes(day))||SPLITS[0];
+  state.gym.push({date:today,split:split.name,exercises:[...state.currentExercises],ts:Date.now()});
+  state.gymStreak++;
+  state.currentExercises=[];
+  save();renderGym();renderHome();
+  microWin(`${split.name} session logged. Gym streak: ${state.gymStreak}.`);
+}
+function renderGymHistory(){
+  const el=document.getElementById('gymHistory');
+  if(!el)return;
+  if(!state.gym.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">No sessions yet.</div>';return;}
+  el.innerHTML=state.gym.slice().reverse().slice(0,5).map(g=>`
+    <div class="task-row">
+      <div style="font-size:18px;">🏋️</div>
+      <div class="task-info">
+        <div class="task-name">${g.split}</div>
+        <div class="task-sub">${g.date} · ${g.exercises?.length||0} exercises</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--acc);">✓</div>
+    </div>`).join('');
+}
+
+// ── MEALS ──
+function renderMeals(){
+  const today=new Date().toISOString().split('T')[0];
+  const todayMeals=state.meals[today]||{};
+  [1,2,3].forEach(n=>{
+    const st=document.getElementById(`meal${n}Inp`);
+    if(st&&todayMeals[n])st.value=todayMeals[n].food||'';
+  });
+  // Factor meal list
+  const el=document.getElementById('factorMealList');
+  if(el){
+    const now=new Date();
+    const factorStart=new Date('2025-04-05');
+    const factorEnd=new Date('2025-04-12');
+    if(now>=factorStart&&now<=factorEnd){
+      el.innerHTML=factorMeals.map(m=>`
+        <div class="factor-meal ${m.used>=m.count?'factor-used':''}" onclick="useFactor('${m.name}')">
+          <div class="factor-emoji">${m.icon}</div>
+          <div class="factor-name">${m.name}</div>
+          <div class="factor-count">${m.used}/${m.count}</div>
+        </div>`).join('');
+    } else {
+      el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">Factor week ended. Back to regular meal logging.</div>';
+    }
+  }
+  // Log
+  const logEl=document.getElementById('mealLog');
+  if(logEl){
+    const entries=Object.entries(todayMeals);
+    if(!entries.length){logEl.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">No meals logged today.</div>';return;}
+    logEl.innerHTML=entries.map(([k,v])=>`
+      <div class="task-row">
+        <div style="font-size:16px;">${k==='3'?'🥤':'🍗'}</div>
+        <div class="task-info">
+          <div class="task-name">${k==='1'?'Meal 1':k==='2'?'Meal 2':'Protein Shake'}</div>
+          <div class="task-sub">${v.food||''} · ${v.time||''}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function logMeal(n){
+  const today=new Date().toISOString().split('T')[0];
+  if(!state.meals[today])state.meals[today]={};
+  const inp=document.getElementById(`meal${n}Inp`);
+  const food=inp?inp.value.trim():(n===3?'Protein Shake':'');
+  state.meals[today][n]={food,logged:true,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})};
+  save();renderMeals();renderHome();
+  microWin(`Meal ${n} logged.`);
+}
+
+function logCalories(){
+  const val=document.getElementById('calorieInp').value;
+  if(!val)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(!state.body.weights.length)return;
+  state.body.calories=state.body.calories||{};
+  state.body.calories[today]=parseInt(val);
+  save();
+}
+
+// ── SLEEP ──
+function renderSleep(){
+  calcSleep();
+  const el=document.getElementById('sleepLog');
+  if(!el)return;
+  if(!state.sleepLog.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">No sleep logged yet.</div>';return;}
+  el.innerHTML=state.sleepLog.slice().reverse().slice(0,7).map(s=>`
+    <div class="task-row">
+      <div style="font-size:16px;">🌙</div>
+      <div class="task-info">
+        <div class="task-name">${s.date}</div>
+        <div class="task-sub">Bed: ${fmt12(s.bedtime)} · Wake: ${fmt12(s.wakeup)} · ${s.duration}</div>
+      </div>
+    </div>`).join('');
+}
+
+function calcSleep(){
+  const b=document.getElementById('bedtimeInp');
+  const w=document.getElementById('wakeInp');
+  if(!b||!w)return;
+  const[bh,bm]=b.value.split(':').map(Number);
+  const[wh,wm]=w.value.split(':').map(Number);
+  let diff=(wh*60+wm)-(bh*60+bm);
+  if(diff<0)diff+=1440;
+  const hrs=Math.floor(diff/60),mins=diff%60;
+  const el=document.getElementById('sleepDur');
+  const msg=document.getElementById('sleepMsg');
+  if(el)el.textContent=`${hrs}h ${mins}m`;
+  if(msg)msg.textContent=hrs>=7?'Good sleep. Recovery is training.':hrs>=6?'Borderline. Aim for 7+.':'Below minimum. Your gains suffer.';
+}
+
+function logSleep(){
+  const b=document.getElementById('bedtimeInp').value;
+  const w=document.getElementById('wakeInp').value;
+  const[bh,bm]=b.split(':').map(Number);
+  const[wh,wm]=w.split(':').map(Number);
+  let diff=(wh*60+wm)-(bh*60+bm);
+  if(diff<0)diff+=1440;
+  const hrs=Math.floor(diff/60),mins=diff%60;
+  const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  state.sleepLog.push({date,bedtime:b,wakeup:w,duration:`${hrs}h ${mins}m`,ts:Date.now()});
+  save();renderSleep();
+}
+
+// ── FINANCE ──
+function renderFinance(){
+  const el=document.getElementById('balanceDisplay');
+  if(el)el.textContent=`$${state.finance.balance.toFixed(2)}`;
+  const log=document.getElementById('spendLog');
+  if(!log)return;
+  if(!state.finance.log.length){log.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">No spending logged yet.</div>';return;}
+  log.innerHTML=state.finance.log.slice().reverse().slice(0,10).map(s=>`
+    <div class="spend-row">
+      <div>
+        <div class="spend-amount">-$${s.amount.toFixed(2)}</div>
+        <div class="spend-cat">${s.cat}</div>
+      </div>
+      <div class="spend-date">${s.date}</div>
+    </div>`).join('');
+}
+
+function logSpend(){
+  const amount=parseFloat(document.getElementById('spendAmount').value);
+  const cat=document.getElementById('spendCat').value;
+  if(!amount||amount<=0)return;
+  state.finance.balance=Math.max(0,state.finance.balance-amount);
+  state.finance.log.push({amount,cat,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),ts:Date.now()});
+  save();renderFinance();
+  if(state.finance.balance<100){microWin(`Balance low: $${state.finance.balance.toFixed(2)}. Alfred is watching.`);}
+  document.getElementById('spendAmount').value='';
+}
+
+// ── SUPPLEMENTS ──
+function renderSupplements(){
+  const today=new Date().toISOString().split('T')[0];
+  if(!state.supps[today])state.supps[today]={};
+  const morning=[{id:'b12',name:'B12'},{id:'fishoil',name:'Fish Oil'},{id:'zinc',name:'Zinc'},{id:'d3',name:'Vitamin D3 (recommended)'},{id:'ashwa',name:'Ashwagandha (recommended)'}];
+  const pregym=[{id:'creatine',name:'Creatine'}];
+  const night=[{id:'magnesium',name:'Magnesium'},{id:'biotin',name:'Biotin'}];
+  const render=(arr,elId)=>{
+    const el=document.getElementById(elId);
+    if(!el)return;
+    el.innerHTML=arr.map(s=>`
+      <div class="supp-item">
+        <div class="supp-check ${state.supps[today][s.id]?'done':''}" onclick="toggleSupp('${s.id}')"></div>
+        <div class="supp-name">${s.name}</div>
+      </div>`).join('');
+  };
+  render(morning,'suppMorning');
+  render(pregym,'suppGym');
+  render(night,'suppNight');
+}
+
+function toggleSupp(id){
+  const today=new Date().toISOString().split('T')[0];
+  if(!state.supps[today])state.supps[today]={};
+  state.supps[today][id]=!state.supps[today][id];
+  save();renderSupplements();
+}
+
+// ── BODY ──
+function renderBody(){
+  const el=document.getElementById('currentWeight');
+  if(el)el.textContent=state.weight;
+  const lbs=document.getElementById('lbsToGoal');
+  if(lbs)lbs.textContent=Math.max(0,state.goalWeight-state.weight);
+  // Target date
+  const target=document.getElementById('bodyTargetDate');
+  if(target&&state.body.weights.length>=2){
+    const weights=state.body.weights.slice(-7);
+    const gain=weights.length>1?(weights[weights.length-1].w-weights[0].w)/(weights.length-1):0;
+    if(gain>0){
+      const weeksNeeded=(state.goalWeight-state.weight)/gain;
+      const targetDate=new Date();
+      targetDate.setDate(targetDate.getDate()+Math.round(weeksNeeded*7));
+      target.innerHTML=`<div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;">TARGET DATE AT CURRENT PACE</div><div style="font-family:var(--dis);font-size:24px;color:var(--acc);">${targetDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div><div style="font-family:var(--mono);font-size:9px;color:var(--muted);">${Math.round(weeksNeeded)} weeks from now</div>`;
+    }
+  }
+  // Assessment
+  renderBodyAssessment();
+  // Photo gallery
+  const gallery=document.getElementById('photoGallery');
+  if(gallery){
+    gallery.innerHTML=state.body.photos.slice(-9).map(p=>`<img src="${p.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;" alt="Progress">`).join('');
+  }
+}
+
+function logBodyStats(){
+  const w=parseFloat(document.getElementById('weightLog').value);
+  const cal=parseFloat(document.getElementById('calorieLog').value);
+  if(!w)return;
+  state.weight=w;
+  state.body.weights.push({w,date:new Date().toISOString().split('T')[0],ts:Date.now()});
+  if(cal)state.body.calories={...state.body.calories,[new Date().toISOString().split('T')[0]]:cal};
+  save();renderBody();renderHome();
+  document.getElementById('weightLog').value='';
+  document.getElementById('calorieLog').value='';
+}
+
+function logMeasurements(){
+  const fields=['Chest','Waist','Arms','Shoulders','Legs'];
+  const meas={};
+  fields.forEach(f=>{
+    const val=document.getElementById(`meas${f}`).value;
+    if(val)meas[f.toLowerCase()]=parseFloat(val);
+  });
+  if(!Object.keys(meas).length)return;
+  state.body.measurements.push({...meas,date:new Date().toISOString().split('T')[0],ts:Date.now()});
+  save();renderBody();
+}
+
+async function renderBodyAssessment(){
+  const el=document.getElementById('bodyAssessment');
+  if(!el)return;
+  if(!state.body.weights.length){el.textContent='Log your stats for Alfred\'s assessment.';return;}
+  const latest=state.body.weights[state.body.weights.length-1];
+  const lbsToGo=state.goalWeight-state.weight;
+  el.textContent=`${state.weight}lbs. ${lbsToGo} lbs to goal. ${lbsToGo>10?'Bulk is a long game. Stay consistent with meals and training.':'Close to goal. Don\'t lose the discipline now.'} Gym streak: ${state.gymStreak} days.`;
+}
+
+function addPhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    state.body.photos.push({url:e.target.result,date:new Date().toISOString().split('T')[0],ts:Date.now()});
+    save();renderBody();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CAREER ──
+function renderCareer(){
+  // Certs
+  const el=document.getElementById('certRoadmap');
+  if(el){
+    el.innerHTML=certProgress.map((c,i)=>`
+      <div class="task-row">
+        <div class="task-check ${c.done?'done':''}" onclick="toggleCert(${i})"></div>
+        <div class="task-info">
+          <div class="task-name ${c.done?'done':''}">${c.name}</div>
+          <div class="task-sub">${c.time} · ${c.why}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--acc);">#${c.priority}</div>
+      </div>`).join('');
+  }
+  // Internships
+  renderInternships();
+  // Weekly career task
+  const wct=document.getElementById('weeklyCareerTask');
+  if(wct){
+    const tasks=["Connect with 3 UH Bauer alumni on LinkedIn this week.","Complete Module 1 of Google Data Analytics Certificate.","Research 3 consulting firms that recruit at UH and note their GPA requirements.","Update your LinkedIn headline to reflect your MIS target.","Apply to 2 internship positions this week — consulting or tech.","Schedule a meeting with your Exploratory Studies advisor about the Bauer transfer timeline.","Practice one case interview question from a free resource like Case in Point."];
+    const week=Math.floor(Date.now()/(1000*60*60*24*7));
+    wct.textContent=tasks[week%tasks.length];
+  }
+  // Academic timeline
+  const timeline=document.getElementById('academicTimeline');
+  if(timeline){
+    timeline.innerHTML=`
+      <div class="task-row"><div style="font-family:var(--dis);font-size:16px;color:var(--acc);width:80px;">NOW</div><div class="task-info"><div class="task-name">Exploratory Studies — GPA boost semester</div><div class="task-sub">2.75 → 3.25 target · 5 online classes</div></div></div>
+      <div class="task-row"><div style="font-family:var(--dis);font-size:16px;color:var(--amber);width:80px;">FALL '26</div><div class="task-info"><div class="task-name">Transfer to Bauer College of Business</div><div class="task-sub">Declare MIS major · Need 3.25 GPA</div></div></div>
+      <div class="task-row"><div style="font-family:var(--dis);font-size:16px;color:var(--muted2);width:80px;">2027</div><div class="task-info"><div class="task-name">First internship — consulting or MIS</div><div class="task-sub">Summer internship target</div></div></div>
+      <div class="task-row"><div style="font-family:var(--dis);font-size:16px;color:var(--muted);width:80px;">2028</div><div class="task-info"><div class="task-name">Graduate from Bauer</div><div class="task-sub">MIS degree · Full-time consulting offer</div></div></div>`;
+  }
+}
+
+function toggleCert(i){
+  certProgress[i].done=!certProgress[i].done;
+  S.set('certProgress',certProgress);
+  renderCareer();
+}
+
+function addInternship(){
+  const company=document.getElementById('internCompany').value.trim();
+  const role=document.getElementById('internRole').value.trim();
+  const deadline=document.getElementById('internDeadline').value;
+  const status=document.getElementById('internStatus').value;
+  if(!company)return;
+  state.career.internships.push({id:uid(),company,role,deadline,status,ts:Date.now()});
+  save();renderInternships();
+  document.getElementById('internCompany').value='';
+  document.getElementById('internRole').value='';
+  document.getElementById('internDeadline').value='';
+}
+
+function renderInternships(){
+  const el=document.getElementById('internList');
+  if(!el)return;
+  if(!state.career.internships.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:8px 0;">No applications tracked yet. Start applying.</div>';return;}
+  const statusColors={researching:'var(--muted)',applied:'var(--amber)',interviewing:'var(--acc)',offer:'var(--green)',rejected:'var(--red)'};
+  el.innerHTML=state.career.internships.map(i=>`
+    <div class="task-row">
+      <div class="task-info">
+        <div class="task-name">${i.company}</div>
+        <div class="task-sub">${i.role}${i.deadline?` · Deadline: ${formatDate(i.deadline)}`:''}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:${statusColors[i.status]||'var(--muted)'};">${i.status.toUpperCase()}</div>
+    </div>`).join('');
+}
+
+function saveLinkedIn(){
+  const val=document.getElementById('linkedinUrl').value.trim();
+  if(val){state.career.linkedin=val;save();}
+}
+
+function uploadResume(input){
+  const file=input.files[0];
+  if(!file)return;
+  const el=document.getElementById('resumeStatus');
+  if(el)el.textContent=`Resume uploaded: ${file.name}. Alfred will analyze it — connect the app to Netlify for full AI analysis.`;
+}
+
+// ── VAULT ──
+function renderVault(){
+  // Semester scoreboard
+  const sb=document.getElementById('semesterScoreboard');
+  if(sb){
+    if(!state.vault.scores.length){sb.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">Complete your first day to start the scoreboard.</div>';}
+    else{
+      sb.innerHTML=state.vault.scores.slice(-10).map(s=>`
+        <div class="task-row">
+          <div class="task-info"><div class="task-sub">${s.date}</div></div>
+          <div>
+            <div style="font-family:var(--dis);font-size:20px;color:${s.score>=70?'var(--acc)':'var(--red)'};">${s.score}</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+  // Reading tracker
+  const rt=document.getElementById('readingTracker');
+  if(rt){
+    rt.innerHTML=books.map((b,i)=>`
+      <div class="task-row">
+        <div class="task-info">
+          <div class="task-name">${b.title}</div>
+          <div class="task-sub">${b.author} · ${b.read}/${b.pages} pages</div>
+          <div style="height:3px;background:var(--s3);border-radius:2px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:${Math.round(b.read/b.pages*100)}%;background:var(--acc);border-radius:2px;"></div></div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn" onclick="addPages(${i})" style="padding:5px 8px;font-size:8px;">+</button>
+        </div>
+      </div>`).join('');
+  }
+  // Contract
+  const cs=document.getElementById('contractSection');
+  if(cs){
+    if(state.vault.contract){
+      cs.innerHTML=`<div class="card2" style="font-size:13px;color:var(--muted2);line-height:1.7;font-style:italic;">"${state.vault.contract}"</div><button class="btn btn-full" onclick="editContract()" style="margin-top:8px;">EDIT CONTRACT</button>`;
+    } else {
+      cs.innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">Write your commitment. Alfred will hold you to it monthly.</div><textarea class="debrief-inp" id="contractInp" placeholder="I commit to..." style="height:80px;margin-bottom:8px;"></textarea><button class="btn btn-full" onclick="saveContract()">SIGN THE CONTRACT</button>`;
+    }
+  }
+  // Sleep archive
+  const sa=document.getElementById('sleepArchive');
+  if(sa){
+    if(!state.vault.debriefs.length){sa.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">Complete your first debrief to start the archive.</div>';}
+    else{
+      sa.innerHTML=state.vault.debriefs.slice().reverse().slice(0,5).map(d=>`
+        <div class="card2" style="margin-bottom:8px;">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:4px;">${d.date}</div>
+          <div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:6px;font-style:italic;">"${d.answer}"</div>
+          ${d.win?`<div style="font-family:var(--mono);font-size:9px;color:var(--green);">WIN: ${d.win}</div>`:''}
+          <div style="font-family:var(--dis);font-size:16px;color:var(--acc);">EGO: ${d.score}</div>
+        </div>`).join('');
+    }
+  }
+}
+
+function addPages(i){
+  const pages=parseInt(prompt('Pages read:'))||0;
+  if(pages>0){books[i].read=Math.min(books[i].pages,books[i].read+pages);S.set('books',books);renderVault();}
+}
+
+function saveContract(){
+  const val=document.getElementById('contractInp')?.value.trim();
+  if(val){state.vault.contract=val;save();renderVault();}
+}
+
+function editContract(){
+  state.vault.contract='';
+  save();renderVault();
+}
+
+// ── ALFRED AI ──
+const SYS=()=>`You are Alfred — Ego from Blue Lock. You run this facility. The facility is ${state.name}'s life.
+
+PERSONALITY:
+${state.mode==='kunigami'?'KUNIGAMI MODE: Cold. Direct. Zero mercy. Drill sergeant energy. Short sentences. No comfort.':'NAGI MODE: Still cold, still Ego. But slightly more adaptive. You acknowledge natural talent. You still push.'}
+Never say "Great question." Never say their name. Speak directly. No warmth unless earned.
+
+USER DATA:
+- Weight: ${state.weight}lbs → goal ${state.goalWeight}lbs (${state.goalWeight-state.weight}lbs to go)
+- GPA: ${state.gpa} → need 3.25 for Bauer College of Business (MIS major, Fall 2026)
+- Credits: ${state.credits} completed
+- Rank: ${state.rank}/300
+- Streak: ${state.streak} days
+- Gym streak: ${state.gymStreak} days
+- Balance: $${state.finance.balance.toFixed(2)}
+- Classes: DRAM 1310, ENGL 1302, ENTR 3310, GOVT 2305, MARK 3337
+- This semester: GPA boost, online classes, ZERO missed submissions
+- Gym split: Chest/Tris · Back/Bis · Legs/Shoulders · Abs/Cardio
+- Pending HW: ${state.hw.filter(x=>!x.done).map(x=>`${x.name}(${x.cls},due ${x.due})`).join(',')||'none'}
+- Custom tasks: ${state.customTasks.filter(x=>!x.done).map(x=>x.name).join(',')||'none'}
+- Kaiser (rival): ${KAISER.weight}lbs, ${KAISER.gpa} GPA, ${KAISER.gym} gym days/week, Rank ${KAISER.rank}
+- Arc: Pre-wildcard Nagi → becoming Kunigami → ceiling is Rin
+- Chart: Leo Sun, Sag Moon, Pisces Rising, Jupiter Scorpio, Life Path 1
+- Supplements: B12, Fish Oil, Zinc, Magnesium, Biotin, Creatine + D3/Ashwagandha suggested
+- Intention today: "${state.intention}"
+
+APP CONTROL: Return JSON at END of message if user requests a change:
+<<<CMD:{"action":"ACTION","data":{}}>>>
+Actions: add_task(name), add_hw(name,due,cls), switch_mode(mode:nagi/kunigami), set_weight(w), log_gym, set_name(n)
+
+Under 4 sentences unless asked for more. Be Alfred.`;
+
+async function sendMsg(){
+  const inp=document.getElementById('chatInp');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  inp.value='';autoResize(inp);
+  appendBubble('user',msg);
+  state.chatHistory.push({role:'user',content:msg});
+  document.getElementById('sendBtn').disabled=true;
+  const typing=appendTyping();
+  try{
+    const res=await fetch('/api/alfred',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:SYS(),messages:state.chatHistory.slice(-12)})
+    });
+    const d=await res.json();
+    typing.remove();
+    const raw=d.content?.[0]?.text||'Connection issue.';
+    const clean=parseCmd(raw);
+    appendBubble('alfred',clean);
+    state.chatHistory.push({role:'assistant',content:clean});
+  }catch{typing.remove();appendBubble('alfred','Connection issue. Try again.');}
+  document.getElementById('sendBtn').disabled=false;
+}
+
+function parseCmd(text){
+  const match=text.match(/<<<CMD:(.*?)>>>/s);
+  if(!match)return text;
+  try{
+    const cmd=JSON.parse(match[1]);
+    switch(cmd.action){
+      case 'add_task':state.customTasks.push({id:uid(),name:cmd.data.name,done:false,ts:Date.now()});save();renderHome();break;
+      case 'add_hw':state.hw.push({id:uid(),...cmd.data,done:false,ts:Date.now()});save();renderHW();renderHome();break;
+      case 'switch_mode':state.mode=cmd.data.mode;save();applyMode();renderSchedule();break;
+      case 'set_weight':state.weight=parseFloat(cmd.data.w);save();renderBody();renderHome();break;
+      case 'log_gym':logGymSession();break;
+      case 'set_name':state.name=cmd.data.n;save();break;
+    }
+  }catch{}
+  return text.replace(/<<<CMD:.*?>>>/s,'').trim();
+}
+
+function appendBubble(who,text){
+  const el=document.getElementById('chatMsgs');
+  const div=document.createElement('div');
+  div.className=`bubble ${who}`;
+  if(who==='alfred')div.innerHTML=`<div class="sender">ALFRED</div>${text}`;
+  else div.textContent=text;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+  return div;
+}
+
+function appendTyping(){
+  const el=document.getElementById('chatMsgs');
+  const div=document.createElement('div');
+  div.className='bubble alfred';
+  div.innerHTML=`<div class="sender">ALFRED</div><div class="typing"><span></span><span></span><span></span></div>`;
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+  return div;
+}
+
+// ── VOICE NOTES ──
+let mediaRecorder=null;let audioChunks=[];let isRecording=false;
+async function toggleVoice(){
+  const btn=document.getElementById('voiceBtn');
+  if(!isRecording){
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream);
+      audioChunks=[];
+      mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+      mediaRecorder.onstop=async()=>{
+        btn.classList.remove('recording');
+        const blob=new Blob(audioChunks,{type:'audio/webm'});
+        document.getElementById('chatInp').value='[Voice note — transcription not available in PWA. Type your message instead.]';
+      };
+      mediaRecorder.start();
+      isRecording=true;
+      btn.classList.add('recording');
+    }catch{appendBubble('alfred','Microphone access denied.');}
+  } else {
+    mediaRecorder?.stop();
+    isRecording=false;
+  }
+}
+
+// ── NOTIFICATIONS ──
+async function requestNotifications(){
+  if('Notification' in window){
+    const permission=await Notification.requestPermission();
+    if(permission==='granted'){
+      microWin('Notifications enabled. Alfred will reach you throughout the day.');
+    }
+  }
+}
+
+function scheduleNotifications(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  // Schedule based on current time and schedule
+  const sched=state.mode==='kunigami'?KUNI_SCHED:NAGI_SCHED;
+  const now=new Date();
+  sched.forEach(block=>{
+    const[h,m]=block.time.split(':').map(Number);
+    const blockTime=new Date();
+    blockTime.setHours(h,m,0,0);
+    const delay=blockTime-now;
+    if(delay>0&&delay<86400000){
+      setTimeout(()=>{
+        if(Notification.permission==='granted'){
+          new Notification('ALFRED',{body:block.task,icon:'/favicon.ico',badge:'/favicon.ico'});
+        }
+      },delay);
+    }
+  });
+}
+
+function scheduleHWNotifications(hw){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const leadTimes={discussion:[1],quiz:[1],essay:[4,1],research:[7,4,1],exam:[14,7,3,1],project:[14,7,3,1]};
+  const leads=leadTimes[hw.type]||[3,1];
+  leads.forEach(days=>{
+    const notifTime=new Date(hw.due+'T09:00:00');
+    notifTime.setDate(notifTime.getDate()-days);
+    const delay=notifTime-new Date();
+    if(delay>0){
+      setTimeout(()=>{
+        new Notification('ALFRED',{body:`${hw.name} (${hw.cls}) due in ${days} day${days>1?'s':''}. Submit it.`});
+      },delay);
+    }
+  });
+}
+
+// ── ALFRED BARS ──
+function updateAlfredBars(){
+  const k=state.mode==='kunigami';
+  const msgs={
+    home:k?`Rank ${state.rank}. Kaiser is at ${KAISER.rank}. Close it.`:`Rank ${state.rank}. Nagi energy — make it count.`,
+    daily:k?'The schedule is the mission. Execute it.':'Your day is laid out. Move through it.',
+    track:k?'Log everything. No exceptions.':'Data builds the pattern. Log it.',
+    grow:k?'Build the body. Build the career. Same discipline.':'Growth is the goal. Track the progress.',
+  };
+  Object.entries(msgs).forEach(([screen,msg])=>{
+    const el=document.getElementById(`${screen}AlfredBar`);
+    if(el)el.textContent=msg;
+  });
+}
+
+// ── MICRO WINS ──
+function microWin(msg){
+  const k=state.mode==='kunigami';
+  const el=document.getElementById('homeAlfredBar');
+  if(el){
+    const prev=el.textContent;
+    el.textContent=k?msg:`${msg}`;
+    setTimeout(()=>{if(el)el.textContent=prev;},3000);
+  }
+}
+
+// ── BLACKOUT MODE ──
+function checkBlackoutMode(){
+  const recentScores=state.vault.scores.slice(-3);
+  if(recentScores.length>=3&&recentScores.every(s=>s.score<50)){
+    state.emergency=true;
+    document.getElementById('emergencyBanner').classList.add('active');
+  }
+}
+
+// ── EMERGENCY FOCUS ──
+function toggleEmergency(){
+  state.emergency=false;
+  document.getElementById('emergencyBanner').classList.remove('active');
+}
+
+function activateEmergency(){
+  state.emergency=true;
+  document.getElementById('emergencyBanner').classList.add('active');
+  closeModal('emergencyModal');
+  goTo('track');
+  // Notify every 30 min
+  const interval=setInterval(()=>{
+    if(!state.emergency){clearInterval(interval);return;}
+    if(Notification.permission==='granted')new Notification('ALFRED',{body:'Still working? Good. Keep going.'});
+  },1800000);
+}
+
+// ── LOW ENERGY ──
+function toggleLowEnergy(){
+  state.lowEnergy=!state.lowEnergy;
+  const btn=document.getElementById('lowEnergyBtn');
+  if(btn)btn.textContent=state.lowEnergy?'⚡ LOW ENERGY MODE ACTIVE — TAP TO DEACTIVATE':'⚡ LOW ENERGY MODE — TAP TO ACTIVATE';
+  if(state.lowEnergy){
+    microWin('Low energy mode on. 3 things. Meal 1, one assignment, water. That\'s it.');
+  }
+}
+
+// ── CANVAS ──
+function saveCanvasToken(){
+  const val=document.getElementById('canvasToken').value.trim();
+  if(val){state.canvas.token=val;save();microWin('Canvas token saved. Alfred will pull your assignments.');}
+}
+
+// ── SETTINGS ──
+function saveProfile(){
+  const w=document.getElementById('settingWeight').value;
+  const g=document.getElementById('settingGoal').value;
+  const gpa=document.getElementById('settingGPA').value;
+  const cr=document.getElementById('settingCredits').value;
+  if(w)state.weight=parseFloat(w);
+  if(g)state.goalWeight=parseFloat(g);
+  if(gpa)state.gpa=parseFloat(gpa);
+  if(cr)state.credits=parseInt(cr);
+  save();renderHome();renderBody();microWin('Profile updated.');
+}
+
+function saveScheduleSettings(){
+  const wake=document.getElementById('settingWake').value;
+  const sleep=document.getElementById('settingSleep').value;
+  save();microWin('Schedule settings saved.');
+}
+
+function setAccentColor(which,color,dim,border){
+  const root=document.documentElement;
+  if(which==='nagi'){root.style.setProperty('--nagi',color);root.style.setProperty('--ndim',dim);root.style.setProperty('--nb',border);}
+  else{root.style.setProperty('--kuni',color);root.style.setProperty('--kdim',dim);root.style.setProperty('--kb',border);}
+  applyMode();
+}
+
+// ── CUSTOM TASKS ──
+function addCustomTask(){
+  const val=document.getElementById('customTaskInp').value.trim();
+  if(!val)return;
+  state.customTasks.push({id:uid(),name:val,done:false,ts:Date.now()});
+  save();renderCustomTasks();renderHome();
+  document.getElementById('customTaskInp').value='';
+}
+
+function renderCustomTasks(){
+  const el=document.getElementById('customTaskList');
+  if(!el)return;
+  if(!state.customTasks.length){el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--muted);">No custom tasks.</div>';return;}
+  el.innerHTML=state.customTasks.map(t=>`
+    <div class="task-row">
+      <div class="task-check ${t.done?'done':''}" onclick="toggleCustomTask('${t.id}')"></div>
+      <div class="task-info"><div class="task-name ${t.done?'done':''}">${t.name}</div></div>
+      <div onclick="removeCustomTask('${t.id}')" style="cursor:pointer;opacity:0.3;padding:4px;">✕</div>
+    </div>`).join('');
+}
+
+function toggleCustomTask(id){
+  const t=state.customTasks.find(x=>x.id===id);
+  if(t){t.done=!t.done;save();renderCustomTasks();renderHome();if(t.done)microWin(`${t.name} done.`);}
+}
+function removeCustomTask(id){state.customTasks=state.customTasks.filter(x=>x.id!==id);save();renderCustomTasks();renderHome();}
+
+function resetApp(){
+  if(confirm('Reset all data? This cannot be undone.')){localStorage.clear();location.reload();}
+}
+
+// ── MODALS ──
+function showModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+// ── UTILS ──
+function uid(){return Math.random().toString(36).slice(2,9);}
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function formatDate(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmt12(t){if(!t)return'--';const[h,m]=t.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
+function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,80)+'px';}
+
+// ── STAGE 2: WEATHER ──
+async function fetchWeather(){
+  try{
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));
+    const{latitude:lat,longitude:lon}=pos.coords;
+    const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&temperature_unit=fahrenheit`);
+    const d=await res.json();
+    const temp=Math.round(d.current.temperature_2m);
+    const code=d.current.weathercode;
+    const icon=code<=1?'☀️':code<=3?'⛅':code<=48?'🌫️':code<=67?'🌧️':code<=77?'❄️':'⛈️';
+    const desc=code<=1?'Clear':code<=3?'Partly cloudy':code<=48?'Foggy':code<=67?'Rainy':code<=77?'Snowy':'Stormy';
+    state.weather={temp,desc,icon,ts:Date.now()};
+    save();
+    updateWeatherUI();
+    // Alfred weather commentary
+    const hot=temp>=85,cold=temp<=50,rainy=code>=51&&code<=67;
+    if(hot){microWin(`${temp}°F outside. Hot day — drink all 3 bottles. No excuse to skip water.`);}
+    else if(rainy){microWin(`${temp}°F and ${desc.toLowerCase()}. Weather doesn't cancel the schedule.`);}
+  }catch(e){console.log('Weather unavailable');}
+}
+
+function updateWeatherUI(){
+  if(!state.weather)return;
+  const{temp,desc,icon}=state.weather;
+  // Add weather to home if element exists
+  const el=document.getElementById('weatherDisplay');
+  if(el)el.innerHTML=`${icon} ${temp}°F · ${desc}`;
+}
+
+// ── STAGE 2: STUDY TIMER ──
+let studyTimerInterval=null;
+let studyTimerSeconds=0;
+let studyTimerRunning=false;
+let studyBreakMode=false;
+
+function getStudyTimerDuration(taskType){
+  // Alfred decides based on task type
+  const durations={
+    discussion:{focus:25*60,break:5*60,label:'25/5 — quick task'},
+    quiz:{focus:30*60,break:10*60,label:'30/10 — assessment mode'},
+    essay:{focus:45*60,break:15*60,label:'45/15 — writing flow'},
+    research:{focus:50*60,break:10*60,label:'50/10 — deep research'},
+    exam:{focus:90*60,break:20*60,label:'90/20 — exam prep block'},
+    project:{focus:60*60,break:15*60,label:'60/15 — project build'},
+    default:{focus:45*60,break:15*60,label:'45/15 — standard block'},
+  };
+  return durations[taskType]||durations.default;
+}
+
+function startStudyTimer(taskType='default'){
+  if(studyTimerRunning){clearInterval(studyTimerInterval);studyTimerRunning=false;renderStudyTimer();return;}
+  const dur=getStudyTimerDuration(taskType);
+  studyTimerSeconds=studyBreakMode?dur.break:dur.focus;
+  studyTimerRunning=true;
+  studyTimerInterval=setInterval(()=>{
+    studyTimerSeconds--;
+    renderStudyTimer();
+    if(studyTimerSeconds<=0){
+      clearInterval(studyTimerInterval);
+      studyTimerRunning=false;
+      studyBreakMode=!studyBreakMode;
+      if(Notification.permission==='granted'){
+        new Notification('ALFRED',{body:studyBreakMode?'Block done. Take your break.':'Break over. Back to work.'});
+      }
+      const dur2=getStudyTimerDuration(taskType);
+      studyTimerSeconds=studyBreakMode?dur2.break:dur2.focus;
+      renderStudyTimer();
+    }
+  },1000);
+  renderStudyTimer();
+}
+
+function renderStudyTimer(){
+  const el=document.getElementById('studyTimerDisplay');
+  if(!el)return;
+  const mins=Math.floor(studyTimerSeconds/60);
+  const secs=String(studyTimerSeconds%60).padStart(2,'0');
+  el.innerHTML=`
+    <div style="font-family:var(--dis);font-size:48px;color:var(--acc);text-align:center;">${mins}:${secs}</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:4px;">${studyBreakMode?'BREAK TIME':'FOCUS BLOCK'}</div>`;
+}
+
+// ── STAGE 2: MEAL PREP PLANNER ──
+const MEAL_PLAN=[
+  {meal:'Meal 1',options:['4 eggs + rice + spinach','Greek yogurt + oats + protein powder','Chicken breast + sweet potato','Cottage cheese + banana + almonds'],macros:{protein:40,carbs:50,fat:15}},
+  {meal:'Meal 2',options:['Ground beef + rice + broccoli','Chicken thighs + pasta + olive oil','Tuna + brown rice + avocado','Salmon + quinoa + vegetables'],macros:{protein:45,carbs:60,fat:20}},
+  {meal:'Shake',options:['2 scoops whey + milk + banana','2 scoops whey + oats + peanut butter','2 scoops whey + milk + berries'],macros:{protein:50,carbs:40,fat:8}},
+];
+
+function renderMealPrep(){
+  const el=document.getElementById('mealPrepPlan');
+  if(!el)return;
+  // Weekly meal prep plan
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const plan=state.mealPrepPlan||generateMealPrepPlan();
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted2);line-height:1.7;margin-bottom:12px;">
+      Based on your bulk goal (${state.goalWeight}lbs) and 2 meals + shake daily, Alfred recommends prepping on Sundays. Target: ~3,200 calories, 160g+ protein daily.
+    </div>
+    ${MEAL_PLAN.map(m=>`
+      <div class="card2" style="margin-bottom:8px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--acc);margin-bottom:6px;">${m.meal.toUpperCase()}</div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:6px;">${m.options[Math.floor(Math.random()*m.options.length)]}</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--muted);">${m.macros.protein}g protein · ${m.macros.carbs}g carbs · ${m.macros.fat}g fat</div>
+      </div>`).join('')}`;
+}
+
+function generateMealPrepPlan(){
+  return MEAL_PLAN.map(m=>({meal:m.meal,option:m.options[0],macros:m.macros}));
+}
+
+function renderGroceryList(){
+  const el=document.getElementById('groceryList');
+  if(!el)return;
+  const items=state.groceryList||getDefaultGroceryList();
+  el.innerHTML=items.map((item,i)=>`
+    <div class="task-row">
+      <div class="task-check ${item.done?'done':''}" onclick="toggleGrocery(${i})"></div>
+      <div class="task-info">
+        <div class="task-name ${item.done?'done':''}">${item.name}</div>
+        <div class="task-sub">${item.category}</div>
+      </div>
+    </div>`).join('');
+}
+
+function getDefaultGroceryList(){
+  return[
+    {name:'Chicken breast (2 lbs)',category:'Protein',done:false},
+    {name:'Ground beef (1 lb)',category:'Protein',done:false},
+    {name:'Eggs (1 dozen)',category:'Protein',done:false},
+    {name:'Greek yogurt',category:'Protein',done:false},
+    {name:'Whey protein powder',category:'Supplements',done:false},
+    {name:'Brown rice (2 lbs)',category:'Carbs',done:false},
+    {name:'Sweet potatoes',category:'Carbs',done:false},
+    {name:'Oats',category:'Carbs',done:false},
+    {name:'Bananas',category:'Fruit',done:false},
+    {name:'Spinach',category:'Vegetables',done:false},
+    {name:'Broccoli',category:'Vegetables',done:false},
+    {name:'Avocados',category:'Healthy Fats',done:false},
+    {name:'Olive oil',category:'Healthy Fats',done:false},
+    {name:'Milk (1 gallon)',category:'Dairy',done:false},
+    {name:'Creatine',category:'Supplements',done:false},
+  ];
+}
+
+function toggleGrocery(i){
+  if(!state.groceryList)state.groceryList=getDefaultGroceryList();
+  state.groceryList[i].done=!state.groceryList[i].done;
+  save();renderGroceryList();
+}
+
+function addGroceryItem(){
+  const val=document.getElementById('groceryInp')?.value.trim();
+  if(!val)return;
+  if(!state.groceryList)state.groceryList=getDefaultGroceryList();
+  state.groceryList.push({name:val,category:'Other',done:false});
+  save();renderGroceryList();
+  document.getElementById('groceryInp').value='';
+}
+
+// ── STAGE 2: PATTERN REPORT ──
+function generatePatternReport(){
+  const el=document.getElementById('patternReport');
+  if(!el)return;
+  if(!state.vault.scores.length){el.textContent='Check in daily for 7 days to generate your pattern report.';return;}
+  // Analyze check-in data
+  const checkins=state.vault.debriefs.slice(-14);
+  if(checkins.length<3){el.textContent='Need more data. Keep checking in daily.';return;}
+  const avgScore=Math.round(checkins.reduce((a,b)=>a+b.score,0)/checkins.length);
+  const best=checkins.reduce((a,b)=>a.score>b.score?a:b);
+  const worst=checkins.reduce((a,b)=>a.score<b.score?a:b);
+  // Supplement pattern
+  const suppDays=Object.keys(state.supps).length;
+  const gymDays=state.gym.length;
+  const weeklyGym=Math.round(gymDays/Math.max(1,Math.ceil((Date.now()-new Date(state.gym[0]?.date||Date.now()).getTime())/(7*86400000)))*10)/10;
+  el.innerHTML=`
+    <div style="font-size:13px;color:var(--muted2);line-height:1.9;">
+      <div style="margin-bottom:8px;">Average Ego Score: <span style="color:var(--acc);font-family:var(--dis);font-size:18px;">${avgScore}</span></div>
+      <div style="margin-bottom:8px;">Best day score: <span style="color:var(--green);">${best.score}</span> on ${best.date}</div>
+      <div style="margin-bottom:8px;">Lowest day: <span style="color:var(--red);">${worst.score}</span> on ${worst.date}</div>
+      <div style="margin-bottom:8px;">Gym consistency: <span style="color:var(--acc);">${weeklyGym} days/week avg</span></div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:10px;">Alfred: ${avgScore>=70?'Consistent execution. Keep the standard.':avgScore>=50?'Inconsistent. Your best days prove you can do it. The gap is discipline.':'Below 50 average. Something is systematically breaking down. Identify it.'}</div>
+    </div>`;
+}
+
+// ── STAGE 2: ALFRED'S WALL ──
+async function generateAlfredWall(){
+  const el=document.getElementById('alfredWall');
+  if(!el)return;
+  // Only generate on Sundays or first time
+  const today=new Date();
+  const lastWall=state.vault.lastWallDate;
+  if(lastWall===today.toISOString().split('T')[0]&&state.vault.wall){
+    el.textContent=state.vault.wall;return;
+  }
+  el.textContent='Alfred is writing his assessment...';
+  try{
+    const gymWeekly=state.gym.filter(g=>{const d=new Date(g.date);return(Date.now()-d.getTime())<7*86400000;}).length;
+    const scores=state.vault.scores.slice(-7);
+    const avgScore=scores.length?Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length):0;
+    const tasksDone=state.hw.filter(x=>x.done).length;
+    const res=await fetch('/api/alfred',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:300,
+        system:`You are Alfred — Ego from Blue Lock. Write a cold, honest weekly scouting report on this person. Like a professional scout assessing a player. No warmth. Just data and assessment. 4-5 sentences max.`,
+        messages:[{role:'user',content:`Week data: Avg Ego Score: ${avgScore}/100. Gym sessions this week: ${gymWeekly}/7. Assignments completed: ${tasksDone}. Current weight: ${state.weight}lbs (goal: ${state.goalWeight}). GPA: ${state.gpa} (need: 3.25). Streak: ${state.streak} days. Mode: ${state.mode}. Write the weekly scouting report.`}]
+      })
+    });
+    const d=await res.json();
+    const wall=d.content?.[0]?.text||getDefaultWall(avgScore);
+    state.vault.wall=wall;
+    state.vault.lastWallDate=today.toISOString().split('T')[0];
+    save();
+    el.textContent=wall;
+  }catch{el.textContent=getDefaultWall(0);}
+}
+
+function getDefaultWall(score){
+  if(score>=80)return`Strong week. Execution is becoming consistent. The gap between potential and output is closing. Kaiser is still ahead but the distance is shrinking. This is what the arc looks like when it's actually moving.`;
+  if(score>=60)return`Inconsistent week. The talent is evident on the good days — the problem is the bad days are pulling the average down. Identifying what breaks down on low days and fixing it is the current priority. Until that's solved, the ceiling stays the same.`;
+  return`Below standard. The data doesn't lie — output this week was insufficient for the goals on the board. Bauer transfer, 170lbs, Rank 287 to something worth mentioning — none of it happens at this pace. The arc requires more than this.`;
+}
+
+// ── STAGE 2: ALFRED'S PREDICTION ──
+async function generatePrediction(){
+  const el=document.getElementById('alfredPrediction');
+  if(!el)return;
+  if(state.vault.scores.length<7){el.textContent='Log data for 7 days and Alfred will generate your 30/60/90 day projection.';return;}
+  el.textContent='Calculating projection...';
+  try{
+    const scores=state.vault.scores.slice(-7);
+    const avgScore=Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length);
+    const gymWeekly=state.gym.length/Math.max(1,state.vault.scores.length/7);
+    const weightGain=state.body.weights.length>1?(state.body.weights[state.body.weights.length-1].w-state.body.weights[0].w)/(state.body.weights.length/7):0;
+    const weeklyGain=Math.max(0,weightGain);
+    const w30=Math.round((state.weight+weeklyGain*4)*10)/10;
+    const w60=Math.round((state.weight+weeklyGain*8)*10)/10;
+    const w90=Math.round((state.weight+weeklyGain*12)*10)/10;
+    const weeksToGoal=(state.goalWeight-state.weight)/Math.max(0.1,weeklyGain);
+    el.innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+        <div class="kaiser-stat"><div class="kaiser-stat-val" style="color:var(--acc);">${w30}</div><div class="kaiser-stat-lbl">30D LBS</div></div>
+        <div class="kaiser-stat"><div class="kaiser-stat-val" style="color:var(--acc);">${w60}</div><div class="kaiser-stat-lbl">60D LBS</div></div>
+        <div class="kaiser-stat"><div class="kaiser-stat-val" style="color:var(--acc);">${w90}</div><div class="kaiser-stat-lbl">90D LBS</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted2);line-height:1.8;">
+        At current pace: ${state.goalWeight}lbs in <span style="color:var(--acc);">${Math.round(weeksToGoal)} weeks</span>.<br>
+        Ego Score avg: ${avgScore}/100 — ${avgScore>=70?'on track':'needs improvement'}.<br>
+        Gym: ${Math.round(gymWeekly*10)/10} sessions/week avg.<br>
+        Bauer transfer: <span style="color:${state.gpa>=3.0?'var(--green)':'var(--red)'};">${state.gpa>=3.25?'On track':'GPA gap is the blocker'}</span>.
+      </div>`;
+  }catch{el.textContent='Projection requires more data. Keep logging.';}
+}
+
+// ── STAGE 2: WEAK POINT SPOTLIGHT ──
+function generateWeakPoint(){
+  const el=document.getElementById('weakPointSpotlight');
+  if(!el)return;
+  const scores=state.vault.scores.slice(-7);
+  const gymWeekly=state.gym.filter(g=>{const d=new Date(g.date);return(Date.now()-d.getTime())<7*86400000;}).length;
+  const today=new Date().toISOString().split('T')[0];
+  const todayMeals=state.meals[today]||{};
+  const mealCount=Object.keys(todayMeals).length;
+  const waterCount=state.water.date===today?state.water.count:0;
+  const tasksDone=state.hw.filter(x=>x.done).length;
+  const totalTasks=state.hw.length;
+  // Identify weakest area
+  let weakPoint='';
+  if(gymWeekly<3)weakPoint=`GYM CONSISTENCY — You're hitting ${gymWeekly} sessions this week. Target is 4-5. Every missed session is a week your bulk extends.`;
+  else if(mealCount<2)weakPoint=`MEAL LOGGING — Meals are being skipped or not logged. At 155lbs trying to hit 170, missing meals is the single biggest thing slowing your bulk.`;
+  else if(waterCount<2)weakPoint=`HYDRATION — Water intake is below target. Low hydration directly tanks your focus, gym performance, and recovery. Drink your bottles.`;
+  else if(totalTasks>0&&tasksDone/totalTasks<0.5)weakPoint=`ASSIGNMENT COMPLETION — Less than 50% of tracked assignments are done. This semester's entire purpose is GPA. Missing submissions is unacceptable.`;
+  else weakPoint=`CONSISTENCY — Your data shows irregular execution. The issue isn't any single category — it's the day-to-day inconsistency. Build the daily habit first.`;
+  el.innerHTML=`<div style="font-family:var(--dis);font-size:14px;color:var(--red);margin-bottom:6px;">THIS WEEK'S WEAK POINT</div><div style="font-size:13px;color:var(--muted2);line-height:1.7;">${weakPoint}</div>`;
+}
+
+// ── STAGE 2: KAISER PROGRESSION ──
+function updateKaiserProgress(){
+  // Kaiser progresses dynamically each week
+  const weeksActive=Math.floor(state.streak/7);
+  const userImproving=state.vault.scores.slice(-7).reduce((a,b)=>a+b.score,0)/7>65;
+  // Kaiser slips slightly if user is executing well, surges if user is slacking
+  if(userImproving){
+    KAISER.weight=Math.min(170,165+weeksActive*0.3);
+    KAISER.gpa=Math.min(3.3,3.1+weeksActive*0.02);
+    KAISER.gym=5;
+  } else {
+    KAISER.weight=Math.min(172,165+weeksActive*0.5);
+    KAISER.gpa=Math.min(3.4,3.1+weeksActive*0.03);
+    KAISER.gym=6;
+  }
+  // Check if user has surpassed Kaiser
+  if(state.weight>=KAISER.weight&&state.gpa>=KAISER.gpa){
+    triggerKaiserSurpassed();
+  }
+  renderKaiser();
+}
+
+function triggerKaiserSurpassed(){
+  if(state.vault.kaiserSurpassed)return;
+  state.vault.kaiserSurpassed=true;
+  state.rank=Math.max(1,state.rank-1);
+  save();
+  // Show full screen announcement
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:950;background:#060608;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;';
+  overlay.innerHTML=`
+    <div style="font-family:var(--dis);font-size:14px;color:var(--muted);letter-spacing:3px;margin-bottom:16px;">ALFRED ANNOUNCES</div>
+    <div style="font-family:var(--dis);font-size:48px;color:var(--acc);margin-bottom:8px;">YOU PASSED HIM.</div>
+    <div style="font-family:var(--dis);font-size:20px;color:var(--red);margin-bottom:24px;">KAISER IS BEHIND YOU NOW.</div>
+    <div style="font-size:14px;color:var(--muted2);line-height:1.8;max-width:300px;margin-bottom:32px;">He served his purpose. You used him to find out what you were capable of. That's over now. Rank ${state.rank} is yours. Find a new wall to break.</div>
+    <button onclick="this.parentElement.remove();assignNewRival();" style="padding:16px 32px;border-radius:12px;font-family:var(--dis);font-size:18px;letter-spacing:2px;cursor:pointer;border:none;background:var(--acc);color:var(--bg);">NEXT RIVAL</button>`;
+  document.body.appendChild(overlay);
+}
+
+function assignNewRival(){
+  // New rival is stronger
+  KAISER.weight=state.weight+8;
+  KAISER.gpa=Math.min(4.0,state.gpa+0.2);
+  KAISER.gym=state.gymStreak>0?Math.min(7,3+1):5;
+  KAISER.rank=state.rank-1;
+  state.vault.kaiserSurpassed=false;
+  save();
+  microWin(`New rival assigned. Rank ${KAISER.rank}. ${KAISER.weight}lbs. ${KAISER.gpa} GPA. The gap just reset.`);
+}
+
+// ── STAGE 2: PRE-GYM PRIMER ──
+function schedulePreGymPrimer(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const sched=state.mode==='kunigami'?KUNI_SCHED:NAGI_SCHED;
+  const gymBlock=sched.find(s=>s.cat==='gym');
+  if(!gymBlock)return;
+  const[h,m]=gymBlock.time.split(':').map(Number);
+  const primerTime=new Date();
+  primerTime.setHours(h,m-5,0,0);
+  if(h*60+m-5<new Date().getHours()*60+new Date().getMinutes())return;
+  const delay=primerTime-new Date();
+  if(delay>0){
+    setTimeout(()=>{
+      const day=new Date().getDay();
+      const split=SPLITS.find(s=>s.days.includes(day))||SPLITS[0];
+      const lastSession=state.gym.filter(g=>g.split===split.name).slice(-1)[0];
+      const lastNote=lastSession?`Last ${split.name}: ${lastSession.exercises?.slice(0,2).map(e=>`${e.name} ${e.weight}lbs`).join(', ')||'no data'}.`:'' ;
+      new Notification('ALFRED',{body:`${split.name} in 5 minutes. ${lastNote} Walk in ready.`});
+    },delay);
+  }
+}
+
+// ── STAGE 2: STREAK PROTECTION ──
+function checkStreakProtection(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(state.streak>0){
+    // Check if it's late in the day and streak actions not done
+    const now=new Date();
+    if(now.getHours()>=20){
+      const today=now.toISOString().split('T')[0];
+      const todayMeals=state.meals[today]||{};
+      const mealsDone=Object.keys(todayMeals).length>=2;
+      const gymDone=state.gym.some(g=>g.date===today);
+      if(!mealsDone||!gymDone){
+        new Notification('ALFRED',{body:`${state.streak} day streak. One action keeps it alive. ${!mealsDone?'Log your meals.':'Log your gym session.'}`});
+      }
+    }
+  }
+}
+
+// ── STAGE 2: MISSION DAY ──
+function checkMissionDay(){
+  const el=document.getElementById('missionDayBanner');
+  if(!el)return;
+  const pending=state.hw.filter(x=>!x.done);
+  const urgent=pending.filter(x=>{const d=Math.ceil((new Date(x.due)-new Date())/(86400000));return d<=1;});
+  const recentScores=state.vault.scores.slice(-3);
+  const slacking=recentScores.length>=3&&recentScores.every(s=>s.score<60);
+  if(urgent.length>=2||slacking){
+    el.style.display='block';
+    el.innerHTML=`<div style="background:rgba(248,113,113,0.08);border-bottom:1px solid rgba(248,113,113,0.2);padding:8px 18px;font-family:var(--mono);font-size:9px;color:var(--red);display:flex;align-items:center;justify-content:space-between;"><span>🔴 MISSION DAY DECLARED — KUNIGAMI MODE ONLY</span><span onclick="document.getElementById('missionDayBanner').style.display='none'" style="cursor:pointer;">✕</span></div>`;
+    if(state.mode!=='kunigami'){state.mode='kunigami';applyMode();renderSchedule();}
+  }
+}
+
+// ── STAGE 2: CANVAS API ──
+async function syncCanvas(){
+  const token=state.canvas.token;
+  if(!token){microWin('Add your Canvas API token in Track → Canvas first.');return;}
+  const el=document.getElementById('canvasSyncStatus');
+  if(el)el.textContent='Syncing with UH Canvas...';
+  try{
+    // UH Canvas API endpoint
+    const res=await fetch('https://uh.instructure.com/api/v1/courses?enrollment_type=student&per_page=10',{
+      headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}
+    });
+    if(!res.ok)throw new Error('Auth failed');
+    const courses=await res.json();
+    // Pull assignments for each course
+    for(const course of courses){
+      const assignRes=await fetch(`https://uh.instructure.com/api/v1/courses/${course.id}/assignments?per_page=20&order_by=due_at`,{
+        headers:{'Authorization':`Bearer ${token}`}
+      });
+      if(!assignRes.ok)continue;
+      const assignments=await assignRes.json();
+      assignments.forEach(a=>{
+        if(!a.due_at)return;
+        const exists=state.hw.find(h=>h.canvasId===a.id);
+        if(!exists){
+          state.hw.push({
+            id:uid(),
+            canvasId:a.id,
+            name:a.name,
+            due:a.due_at.split('T')[0],
+            cls:course.course_code||course.name,
+            type:'assignment',
+            done:a.submission?.workflow_state==='submitted'||false,
+            ts:Date.now(),
+          });
+        }
+      });
+    }
+    save();renderHW();renderHome();
+    if(el)el.textContent=`Synced ${courses.length} courses. Assignments loaded.`;
+    microWin(`Canvas synced. ${state.hw.length} assignments tracked.`);
+  }catch(e){
+    if(el)el.textContent='Sync failed. Check your API token or try again.';
+    microWin('Canvas sync failed. Token may be expired.');
+  }
+}
+
+// ── STAGE 2: SPOTIFY ──
+function openSpotifyPreset(presetName){
+  const searches={
+    'LOCKED IN':'40hz binaural beats focus study',
+    'FLOW STATE':'alpha waves creative focus lofi',
+    'BEAST MODE':'gym workout motivation 2024',
+    'MORNING IGNITION':'morning energy motivation',
+    'WIND DOWN':'sleep theta waves relaxing',
+    'EMERGENCY FOCUS':'deep focus binaural concentration',
+  };
+  const q=searches[presetName]||presetName;
+  window.open(`https://open.spotify.com/search/${encodeURIComponent(q)}`,'_blank');
+}
+
+function renderMusicPresets(){
+  const el=document.getElementById('musicPresets');
+  if(!el)return;
+  el.innerHTML=MUSIC_PRESETS.map(p=>`
+    <div class="card2" style="cursor:pointer;margin-bottom:8px;" onclick="openSpotifyPreset('${p.name}')">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;">${p.emoji}</div>
+        <div style="flex:1;">
+          <div style="font-family:var(--dis);font-size:16px;color:var(--acc);">${p.name}</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);">${p.desc} · ${p.bpm}</div>
+          <div style="font-family:var(--mono);font-size:8px;color:var(--muted);">Best for: ${p.use}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--acc);">▶ OPEN</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── STAGE 2: LINKEDIN ──
+function renderLinkedIn(){
+  const el=document.getElementById('linkedinStatus');
+  if(!el)return;
+  if(!state.career.linkedin){
+    el.innerHTML=`<div style="font-size:12px;color:var(--muted);line-height:1.6;">Add your LinkedIn URL in Career → Settings. Alfred will give you weekly networking tasks and profile improvement tips.</div>`;
+    return;
+  }
+  const tips=[
+    `Add your MARK 3337 project to your experience. Quantify results.`,
+    `Connect with 3 Bauer College alumni this week. Message them specifically.`,
+    `Your headline should say "Aspiring MIS Consultant | University of Houston" not just "Student."`,
+    `Post once this week. Document your fitness or academic journey. Build the presence.`,
+    `Find 2 recruiters at consulting firms that recruit from UH. Connect now, not when you need them.`,
+  ];
+  const week=Math.floor(Date.now()/(1000*60*60*24*7));
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="font-size:18px;">💼</div>
+      <div>
+        <div style="font-size:12px;font-weight:600;">${state.career.linkedin}</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--green);">CONNECTED</div>
+      </div>
+      <a href="${state.career.linkedin.startsWith('http')?state.career.linkedin:'https://'+state.career.linkedin}" target="_blank" style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--acc);text-decoration:none;">OPEN ›</a>
+    </div>
+    <div style="background:var(--s3);border-radius:8px;padding:10px;">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--acc);margin-bottom:4px;">THIS WEEK'S TASK</div>
+      <div style="font-size:12px;color:var(--muted2);line-height:1.6;">${tips[week%tips.length]}</div>
+    </div>`;
+}
+
+// ── STAGE 2: UPDATE READING TRACKER WITH ALL BOOKS ──
+const FULL_BOOKS=[
+  {title:"Can't Hurt Me",author:'David Goggins',pages:364,read:0,why:'Rewires discipline and pain tolerance'},
+  {title:'Atomic Habits',author:'James Clear',pages:320,read:0,why:'Systems over goals'},
+  {title:'Almanack of Naval Ravikant',author:'Eric Jorgenson',pages:242,read:0,why:'Wealth and leverage thinking'},
+  {title:'$100M Offers',author:'Alex Hormozi',pages:271,read:0,why:'Business and consulting mindset'},
+  {title:'The Four Agreements',author:'Don Miguel Ruiz',pages:168,read:0,why:'Break self-limiting beliefs'},
+  {title:'A New Earth',author:'Eckhart Tolle',pages:316,read:0,why:'Ego dissolution and presence'},
+  {title:'Breaking The Habit of Being Yourself',author:'Joe Dispenza',pages:360,read:0,why:'Identity replacement — your third book'},
+  {title:'The 48 Laws of Power',author:'Robert Greene',pages:452,read:0,why:'How power and rooms work'},
+  {title:'Discipline Is Destiny',author:'Ryan Holiday',pages:352,read:0,why:'Self-control as identity'},
+  {title:'Psycho-Cybernetics',author:'Maxwell Maltz',pages:288,read:0,why:'Update your self-image at root level'},
+  {title:'Never Split the Difference',author:'Chris Voss',pages:288,read:0,why:'Negotiation — consulting weapon'},
+  {title:'The Alchemist',author:'Paulo Coelho',pages:197,read:0,why:'Personal legend — Leo Sun energy'},
+  {title:'The War of Art',author:'Steven Pressfield',pages:168,read:0,why:'Kills resistance and procrastination'},
+];
+
+if(!S.get('books')){S.set('books',FULL_BOOKS);}
+books=S.get('books')||FULL_BOOKS;
+
+// ── STAGE 2: SELF REFLECTION QUESTIONS ──
+const DEEP_QUESTIONS=[
+  "Are you making decisions based on who you are right now, or who you're becoming?",
+  "What would the version of you that already made it to Bauer think of this week?",
+  "What are you consistently avoiding that you know you shouldn't be?",
+  "Is the gap between your potential and your output acceptable to you?",
+  "What does Kaiser have that you don't right now — and what would it take to close that?",
+  "If Alfred graded you this semester like a professor, what grade would you get?",
+  "Are you building identity or just following a schedule?",
+];
+
+function renderSelfReflection(){
+  const el=document.getElementById('selfReflection');
+  if(!el)return;
+  const week=Math.floor(Date.now()/(1000*60*60*24*7));
+  const q=DEEP_QUESTIONS[week%DEEP_QUESTIONS.length];
+  const lastAnswer=state.vault.reflections?.slice(-1)[0];
+  el.innerHTML=`
+    <div style="font-size:13px;color:var(--muted2);line-height:1.7;margin-bottom:12px;font-style:italic;">"${q}"</div>
+    <textarea class="debrief-inp" id="reflectionInp" placeholder="Your honest answer..." style="height:80px;margin-bottom:8px;"></textarea>
+    <button class="btn btn-full" onclick="saveReflection()">SAVE REFLECTION</button>
+    ${lastAnswer?`<div style="margin-top:12px;font-family:var(--mono);font-size:8px;color:var(--muted);">Last week: "${lastAnswer.answer.slice(0,80)}..."</div>`:''}`;
+}
+
+function saveReflection(){
+  const val=document.getElementById('reflectionInp')?.value.trim();
+  if(!val)return;
+  if(!state.vault.reflections)state.vault.reflections=[];
+  state.vault.reflections.push({q:DEEP_QUESTIONS[Math.floor(Date.now()/(1000*60*60*24*7))%DEEP_QUESTIONS.length],answer:val,date:new Date().toISOString().split('T')[0]});
+  save();renderSelfReflection();microWin('Reflection saved.');
+}
+
+// ── STAGE 2: TIME AUDIT ──
+function renderTimeAudit(){
+  const el=document.getElementById('timeAudit');
+  if(!el)return;
+  const today=new Date().toISOString().split('T')[0];
+  const todayAudit=state.timeAudits?.find(a=>a.date===today);
+  const categories=['Study','Gym','Sleep','Phone','Social','Free Time','Other'];
+  if(todayAudit){
+    el.innerHTML=`<div style="font-size:12px;color:var(--muted2);line-height:1.8;">${Object.entries(todayAudit.hours).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);"><span>${k}</span><span style="color:var(--acc);font-family:var(--mono);">${v}h</span></div>`).join('')}</div><button class="btn btn-full" onclick="resetTimeAudit()" style="margin-top:8px;">RESET TODAY</button>`;
+    return;
+  }
+  el.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">Roughly how many hours did you spend on each today?</div>
+    ${categories.map(c=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="flex:1;font-size:12px;">${c}</div>
+        <input class="exercise-inp" type="number" id="audit_${c}" placeholder="0" min="0" max="24" step="0.5">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);">hrs</div>
+      </div>`).join('')}
+    <button class="btn btn-full" onclick="saveTimeAudit()" style="margin-top:8px;">SAVE AUDIT</button>`;
+}
+
+function saveTimeAudit(){
+  const categories=['Study','Gym','Sleep','Phone','Social','Free Time','Other'];
+  const hours={};
+  categories.forEach(c=>{const el=document.getElementById(`audit_${c}`);if(el)hours[c]=parseFloat(el.value)||0;});
+  if(!state.timeAudits)state.timeAudits=[];
+  state.timeAudits.push({date:new Date().toISOString().split('T')[0],hours,ts:Date.now()});
+  save();renderTimeAudit();
+  // Alfred commentary on phone time
+  if(hours['Phone']>=3)microWin(`${hours['Phone']} hours on your phone today. That's where your time went.`);
+}
+
+function resetTimeAudit(){
+  if(!state.timeAudits)return;
+  const today=new Date().toISOString().split('T')[0];
+  state.timeAudits=state.timeAudits.filter(a=>a.date!==today);
+  save();renderTimeAudit();
+}
+
+// ── STAGE 2: STUDY TIMER UI INJECTION ──
+function injectStudyTimerUI(){
+  const schedScroll=document.getElementById('daily-content-schedule');
+  if(!schedScroll||document.getElementById('studyTimerDisplay'))return;
+  const timerDiv=document.createElement('div');
+  timerDiv.className='card';
+  timerDiv.style.marginBottom='12px';
+  timerDiv.innerHTML=`
+    <div class="card-title">STUDY TIMER</div>
+    <div id="studyTimerDisplay">
+      <div style="font-family:var(--dis);font-size:48px;color:var(--acc);text-align:center;">45:00</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-top:4px;">FOCUS BLOCK</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;">
+      <button class="btn" onclick="startStudyTimer('discussion')" style="font-size:8px;">QUICK</button>
+      <button class="btn" onclick="startStudyTimer('essay')" style="font-size:8px;">ESSAY</button>
+      <button class="btn" onclick="startStudyTimer('research')" style="font-size:8px;">DEEP</button>
+    </div>
+    <button class="btn btn-full" onclick="startStudyTimer()" style="margin-top:8px;" id="timerMainBtn">▶ START FOCUS BLOCK</button>`;
+  schedScroll.insertBefore(timerDiv,schedScroll.firstChild);
+}
+
+// ── STAGE 2: INJECT STAGE 2 UI INTO EXISTING SCREENS ──
+function injectStage2UI(){
+  // Add weather to home
+  const homeScroll=document.querySelector('#s-home .scroll');
+  if(homeScroll&&!document.getElementById('weatherDisplay')){
+    const weatherDiv=document.createElement('div');
+    weatherDiv.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--muted);';
+    weatherDiv.id='weatherDisplay';
+    weatherDiv.textContent='Fetching weather...';
+    homeScroll.insertBefore(weatherDiv,homeScroll.firstChild);
+  }
+  // Add mission day banner slot
+  if(!document.getElementById('missionDayBanner')){
+    const banner=document.createElement('div');
+    banner.id='missionDayBanner';
+    banner.style.display='none';
+    document.getElementById('app').insertBefore(banner,document.getElementById('app').firstChild);
+  }
+  // Inject study timer into daily schedule
+  injectStudyTimerUI();
+  // Add Stage 2 tabs to vault
+  injectVaultStage2();
+  // Add meal prep to meals tab
+  injectMealPrepUI();
+  // Add canvas sync button
+  injectCanvasSyncUI();
+  // Add LinkedIn status
+  injectLinkedInUI();
+  // Add music presets
+  injectMusicUI();
+  // Add weak point spotlight to vault
+  injectWeakPoint();
+}
+
+function injectVaultStage2(){
+  const vault=document.getElementById('grow-content-vault');
+  if(!vault||document.getElementById('weakPointSpotlight'))return;
+  // Weak point spotlight
+  const wp=document.createElement('div');
+  wp.innerHTML=`<div class="divider"></div><div class="card-title">WEAK POINT SPOTLIGHT</div><div class="card2" id="weakPointSpotlight" style="font-size:13px;color:var(--muted2);line-height:1.7;">Analyzing your data...</div>`;
+  vault.appendChild(wp);
+  // Alfred's Wall button
+  const wallBtn=document.createElement('button');
+  wallBtn.className='btn btn-full';
+  wallBtn.style.marginTop='8px';
+  wallBtn.textContent='GENERATE ALFRED\'S WALL';
+  wallBtn.onclick=generateAlfredWall;
+  vault.appendChild(wallBtn);
+  // Prediction button
+  const predBtn=document.createElement('button');
+  predBtn.className='btn btn-full';
+  predBtn.style.marginTop='8px';
+  predBtn.textContent='GENERATE PREDICTION';
+  predBtn.onclick=generatePrediction;
+  vault.appendChild(predBtn);
+  // Self reflection
+  const sr=document.createElement('div');
+  sr.innerHTML=`<div class="divider"></div><div class="card-title">SELF REFLECTION</div><div id="selfReflection"></div>`;
+  vault.appendChild(sr);
+  // Time audit
+  const ta=document.createElement('div');
+  ta.innerHTML=`<div class="divider"></div><div class="card-title">TIME AUDIT</div><div id="timeAudit"></div>`;
+  vault.appendChild(ta);
+  // Pattern report
+  const pr=document.createElement('div');
+  pr.innerHTML=`<div class="divider"></div><div class="card-title">PATTERN REPORT</div><div id="patternReport2" class="card2" style="font-size:13px;color:var(--muted2);line-height:1.7;">Loading...</div>`;
+  vault.appendChild(pr);
+}
+
+function injectMealPrepUI(){
+  const mealsContent=document.getElementById('track-content-meals');
+  if(!mealsContent||document.getElementById('mealPrepPlan'))return;
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div class="divider"></div>
+    <div class="card-title" style="margin-top:10px;">MEAL PREP PLAN</div>
+    <div id="mealPrepPlan"></div>
+    <div class="divider"></div>
+    <div class="card-title">GROCERY LIST</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input class="inp" id="groceryInp" placeholder="Add item...">
+      <button class="btn" onclick="addGroceryItem()">ADD</button>
+    </div>
+    <div id="groceryList"></div>`;
+  mealsContent.appendChild(div);
+}
+
+function injectCanvasSyncUI(){
+  const canvasContent=document.getElementById('track-content-canvas');
+  if(!canvasContent||document.getElementById('canvasSyncStatus'))return;
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-full" onclick="syncCanvas()">↻ SYNC CANVAS NOW</button>
+    </div>
+    <div id="canvasSyncStatus" style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:10px;"></div>`;
+  const token=canvasContent.querySelector('.card2');
+  if(token)token.after(div);
+}
+
+function injectLinkedInUI(){
+  const careerContent=document.getElementById('grow-content-career');
+  if(!careerContent||document.getElementById('linkedinStatus'))return;
+  const li=careerContent.querySelector('#linkedinTip');
+  if(li){
+    const statusDiv=document.createElement('div');
+    statusDiv.id='linkedinStatus';
+    li.after(statusDiv);
+  }
+}
+
+function injectMusicUI(){
+  const alfredTab=document.getElementById('daily-content-alfred');
+  if(!alfredTab||document.getElementById('musicPresets'))return;
+  const musicDiv=document.createElement('div');
+  musicDiv.style.cssText='padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;';
+  musicDiv.innerHTML=`
+    <div class="card-title" style="margin-bottom:8px;">FREQUENCY PRESETS</div>
+    <div id="musicPresets"></div>`;
+  alfredTab.insertBefore(musicDiv,alfredTab.querySelector('.chat-msgs'));
+}
+
+function injectWeakPoint(){
+  const el=document.getElementById('weakPointSpotlight');
+  if(el)generateWeakPoint();
+}
+
+// ── STAGE 2: INIT OVERRIDE ──
+const originalInit=init;
+init=function(){
+  originalInit();
+  // Stage 2 additions
+  injectStage2UI();
+  fetchWeather();
+  renderMealPrep();
+  renderGroceryList();
+  renderMusicPresets();
+  renderLinkedIn();
+  renderSelfReflection();
+  renderTimeAudit();
+  generatePatternReport();
+  generateWeakPoint();
+  schedulePreGymPrimer();
+  checkStreakProtection();
+  checkMissionDay();
+  updateKaiserProgress();
+  // Update pattern report in vault
+  setTimeout(()=>{
+    const pr=document.getElementById('patternReport2');
+    if(pr){
+      const scores=state.vault.scores.slice(-7);
+      const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b.score,0)/scores.length):0;
+      pr.textContent=scores.length<3?'Check in daily for 7 days.':`7-day avg Ego Score: ${avg}. ${avg>=70?'Executing well.':avg>=50?'Inconsistent — find the pattern.':'Below standard — identify what breaks down.'}`;
+    }
+  },500);
+  // Sunday prediction and wall
+  if(new Date().getDay()===0){
+    setTimeout(generatePrediction,2000);
+    setTimeout(generateAlfredWall,3000);
+  }
+};
+
+// ── BOOT ──
+initOnboarding();
+setInterval(renderSchedule,60000);
+setInterval(renderHome,300000);
+setInterval(checkStreakProtection,3600000);
+setInterval(updateKaiserProgress,86400000);
+</script>
+</body>
+</html>
